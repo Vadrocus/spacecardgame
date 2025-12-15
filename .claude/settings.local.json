@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m http.server:*)",
+      "Bash(curl:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)"
+    ]
+  }
+}
