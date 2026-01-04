@@ -1,261 +1,60 @@
 /**
- * Card Database
+ * Space Card Game - Card Database
  */
 
-export const cardDatabase = [
-    // Creatures (with attack/defense stats)
-    {
-        name: "PIXEL WARRIOR",
-        type: "creature",
-        cost: 3,
-        attack: 3,
-        defense: 2,
-        effect: "A reliable fighter.",
-        flavor: "\"My sword is 8-bit, but the pain is real.\""
-    },
-    {
-        name: "BYTE DRAGON",
-        type: "creature",
-        cost: 5,
-        attack: 5,
-        defense: 4,
-        flying: true,
-        effect: "Flying.",
-        flavor: "It breathes fire in 256 colors."
-    },
-    {
-        name: "CODE SLIME",
-        type: "creature",
-        cost: 1,
-        attack: 1,
-        defense: 1,
-        effect: "Cheap blocker.",
-        flavor: "Born from forgotten semicolons."
-    },
-    {
-        name: "CYBER KNIGHT",
-        type: "creature",
-        cost: 4,
-        attack: 4,
-        defense: 3,
-        effect: "Strong and balanced.",
-        flavor: "Honor.exe has been loaded."
-    },
-    {
-        name: "GLITCH GOLEM",
-        type: "creature",
-        cost: 6,
-        attack: 6,
-        defense: 6,
-        effect: "Massive stats.",
-        flavor: "It exists between frames of reality."
-    },
-    {
-        name: "SPRITE FAIRY",
-        type: "creature",
-        cost: 2,
-        attack: 2,
-        defense: 1,
-        haste: true,
-        effect: "Haste.",
-        flavor: "Too fast for the garbage collector."
-    },
-    {
-        name: "BIT BEAST",
-        type: "creature",
-        cost: 3,
-        attack: 3,
-        defense: 3,
-        lifelink: true,
-        effect: "Lifelink. Heals you when attacking.",
-        flavor: "It feeds on ones and zeros alike."
-    },
-    {
-        name: "RAM KNIGHT",
-        type: "creature",
-        cost: 2,
-        attack: 2,
-        defense: 2,
-        effect: "Early fighter.",
-        flavor: "First in, never out."
-    },
-    {
-        name: "CACHE HYDRA",
-        type: "creature",
-        cost: 7,
-        attack: 7,
-        defense: 7,
-        trample: true,
-        effect: "Trample. Excess damage hits enemy.",
-        flavor: "Seven heads, seven threads, infinite terror."
-    },
-    {
-        name: "KERNEL PANTHER",
-        type: "creature",
-        cost: 4,
-        attack: 4,
-        defense: 2,
-        effect: "High attack, low defense.",
-        flavor: "Runs at ring zero with no protection."
-    },
-    {
-        name: "CLOUD SPRITE",
-        type: "creature",
-        cost: 2,
-        attack: 1,
-        defense: 3,
-        flying: true,
-        effect: "Flying.",
-        flavor: "Hosted on someone else's computer."
-    },
-    {
-        name: "FIREWALL PHOENIX",
-        type: "creature",
-        cost: 4,
-        attack: 3,
-        defense: 3,
-        flying: true,
-        effect: "Flying.",
-        flavor: "Blocks malicious traffic and claws."
-    },
+// Generate blank player cards (40 per deck)
+function generateBlankDeck() {
+    const cards = [];
+    for (let i = 0; i < 40; i++) {
+        cards.push({
+            id: i,
+            name: `CARD ${i + 1}`,
+            type: 'ship',
+            cost: Math.floor(i / 10) + 1, // Cost 1-4 based on position
+            attack: 0,
+            defense: 1,
+            effect: 'Blank card.',
+            flavor: ''
+        });
+    }
+    return cards;
+}
 
-    // Spells (with spellEffect for functionality)
-    {
-        name: "FIREBALL.EXE",
-        type: "spell",
-        cost: 2,
-        spellEffect: "damage",
-        damage: 3,
-        effect: "Deal 3 damage to enemy.",
-        flavor: "Warming up the CPU one target at a time."
-    },
-    {
-        name: "LIGHTNING BOLT",
-        type: "spell",
-        cost: 1,
-        spellEffect: "damage",
-        damage: 2,
-        effect: "Deal 2 damage to enemy.",
-        flavor: "Faster than a context switch."
-    },
-    {
-        name: "HEAL.SYS",
-        type: "spell",
-        cost: 2,
-        spellEffect: "heal",
-        healAmount: 4,
-        effect: "Restore 4 health.",
-        flavor: "Have you tried turning it off and on?"
-    },
-    {
-        name: "POWER SURGE",
-        type: "spell",
-        cost: 3,
-        spellEffect: "damage",
-        damage: 5,
-        effect: "Deal 5 damage to enemy.",
-        flavor: "Warning: May void warranty."
-    },
-    {
-        name: "DEBUG MODE",
-        type: "spell",
-        cost: 1,
-        spellEffect: "draw",
-        drawCount: 2,
-        effect: "Draw 2 cards.",
-        flavor: "printf('found you');"
-    },
-    {
-        name: "SYSTEM RESTORE",
-        type: "spell",
-        cost: 3,
-        spellEffect: "heal",
-        healAmount: 6,
-        effect: "Restore 6 health.",
-        flavor: "Rolling back to a better time."
-    },
-    {
-        name: "FORK BOMB",
-        type: "spell",
-        cost: 4,
-        spellEffect: "damage",
-        damage: 6,
-        effect: "Deal 6 damage to enemy.",
-        flavor: ":(){ :|:& };:"
-    },
-    {
-        name: "OVERCLOCK",
-        type: "spell",
-        cost: 2,
-        spellEffect: "draw",
-        drawCount: 3,
-        effect: "Draw 3 cards.",
-        flavor: "Speed now, regret later."
-    },
-    // Extra copies of draw spells
-    {
-        name: "DEBUG MODE",
-        type: "spell",
-        cost: 1,
-        spellEffect: "draw",
-        drawCount: 2,
-        effect: "Draw 2 cards.",
-        flavor: "printf('found you');"
-    },
-    {
-        name: "DEBUG MODE",
-        type: "spell",
-        cost: 1,
-        spellEffect: "draw",
-        drawCount: 2,
-        effect: "Draw 2 cards.",
-        flavor: "printf('found you');"
-    },
-    {
-        name: "STACK OVERFLOW",
-        type: "spell",
-        cost: 3,
-        spellEffect: "draw",
-        drawCount: 4,
-        effect: "Draw 4 cards.",
-        flavor: "Just copy-paste from the top answer."
-    },
-    {
-        name: "MEMORY LEAK",
-        type: "spell",
-        cost: 0,
-        spellEffect: "draw",
-        drawCount: 1,
-        effect: "Draw 1 card. Free!",
-        flavor: "Where did all my RAM go?"
-    },
-    {
-        name: "MEMORY LEAK",
-        type: "spell",
-        cost: 0,
-        spellEffect: "draw",
-        drawCount: 1,
-        effect: "Draw 1 card. Free!",
-        flavor: "Where did all my RAM go?"
-    },
-
-    // Lands (more copies for better draw rate)
-    { name: "DATA CENTER", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "99.99% uptime guaranteed." },
-    { name: "DATA CENTER", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "99.99% uptime guaranteed." },
-    { name: "DATA CENTER", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "99.99% uptime guaranteed." },
-    { name: "SERVER FARM", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Where the cloud touches ground." },
-    { name: "SERVER FARM", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Where the cloud touches ground." },
-    { name: "SERVER FARM", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Where the cloud touches ground." },
-    { name: "MEMORY BANK", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Savings with zero interest." },
-    { name: "MEMORY BANK", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Savings with zero interest." },
-    { name: "MEMORY BANK", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "Savings with zero interest." },
-    { name: "POWER GRID", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "The source of all computation." },
-    { name: "POWER GRID", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "The source of all computation." },
-    { name: "POWER GRID", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "The source of all computation." },
-    { name: "NETWORK HUB", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "All packets lead here." },
-    { name: "NETWORK HUB", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "All packets lead here." },
-    { name: "NETWORK HUB", type: "land", cost: 0, manaProduction: 1, effect: "Tap: Add 1 mana.", flavor: "All packets lead here." },
+// Planet deck - drawn at game start
+export const planetDeck = [
+    { name: 'TERRA NOVA', type: 'planet', effect: 'Earthlike world.', resources: 3, color: '#22c55e' },
+    { name: 'CRIMSON DUST', type: 'planet', effect: 'Desert planet.', resources: 2, color: '#ef4444' },
+    { name: 'FROZEN DEEP', type: 'planet', effect: 'Ice giant.', resources: 2, color: '#60a5fa' },
+    { name: 'GAS TITAN', type: 'planet', effect: 'Gas giant.', resources: 4, color: '#f97316' },
+    { name: 'VOID ROCK', type: 'planet', effect: 'Barren asteroid.', resources: 1, color: '#888888' },
+    { name: 'JUNGLE MOON', type: 'planet', effect: 'Overgrown moon.', resources: 3, color: '#84cc16' },
+    { name: 'CRYSTAL WORLD', type: 'planet', effect: 'Crystalline surface.', resources: 5, color: '#a855f7' },
+    { name: 'OCEAN PLANET', type: 'planet', effect: 'Global ocean.', resources: 3, color: '#06b6d4' },
 ];
+
+// Artifact deck - drawn at game start
+export const artifactDeck = [
+    { name: 'STAR FORGE', type: 'artifact', effect: 'Ancient factory.', power: 2, color: '#fbbf24' },
+    { name: 'WARP GATE', type: 'artifact', effect: 'Teleportation hub.', power: 3, color: '#8b5cf6' },
+    { name: 'VOID CRYSTAL', type: 'artifact', effect: 'Energy source.', power: 2, color: '#ec4899' },
+    { name: 'TITAN WRECK', type: 'artifact', effect: 'Crashed warship.', power: 4, color: '#6b7280' },
+    { name: 'DATA SPIRE', type: 'artifact', effect: 'Knowledge archive.', power: 1, color: '#14b8a6' },
+    { name: 'SHIELD ARRAY', type: 'artifact', effect: 'Defense network.', power: 3, color: '#3b82f6' },
+];
+
+// Natives deck - drawn at game start
+export const nativesDeck = [
+    { name: 'SILICON HIVE', type: 'natives', effect: 'Hive mind.', hostility: 2, color: '#84cc16' },
+    { name: 'VOID WALKERS', type: 'natives', effect: 'Phase beings.', hostility: 3, color: '#8b5cf6' },
+    { name: 'CRYSTAL SINGERS', type: 'natives', effect: 'Peaceful traders.', hostility: 1, color: '#06b6d4' },
+    { name: 'IRON LEGION', type: 'natives', effect: 'Machine army.', hostility: 4, color: '#ef4444' },
+    { name: 'SPORE MIND', type: 'natives', effect: 'Fungal network.', hostility: 2, color: '#22c55e' },
+    { name: 'STAR WHALES', type: 'natives', effect: 'Space fauna.', hostility: 1, color: '#60a5fa' },
+    { name: 'ANCIENT ONES', type: 'natives', effect: 'Elder race.', hostility: 3, color: '#fbbf24' },
+];
+
+// Player card database (blank for now)
+export const cardDatabase = generateBlankDeck();
 
 // Shuffle utility
 export function shuffle(array) {
@@ -265,4 +64,9 @@ export function shuffle(array) {
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
+}
+
+// Pick random from array
+export function pickRandom(array) {
+    return array[Math.floor(Math.random() * array.length)];
 }

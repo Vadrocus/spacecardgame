@@ -1,21 +1,23 @@
 /**
- * Game State - Deck, Hand, Battlefield, Mana, Combat, AI, and Game Logic
+ * Space Card Game - Board, Zones, Gates, and Game Logic
  */
 
 import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.js';
-import { cardDatabase, shuffle } from './data.js';
+import { cardDatabase, planetDeck, artifactDeck, nativesDeck, shuffle, pickRandom } from './data.js';
 import { Draw } from './engine.js';
 
+// Deck class
 export class Deck {
-    constructor(x, y) {
+    constructor(x, y, isPlayer = true) {
         this.x = x;
         this.y = y;
+        this.isPlayer = isPlayer;
         this.cards = [];
         this.zIndex = 0;
         this.hovered = false;
 
-        const allCards = [...cardDatabase, ...cardDatabase];
-        this.cards = shuffle(allCards);
+        // Each player gets their own shuffled 40-card deck
+        this.cards = shuffle([...cardDatabase]);
     }
 
     get count() { return this.cards.length; }
@@ -23,6 +25,193 @@ export class Deck {
     draw() {
         if (this.cards.length === 0) return null;
         return this.cards.pop();
+    }
+
+    containsPoint(px, py) {
+        const scale = 0.4;
+        const halfW = CARD_WIDTH * scale / 2;
+        const halfH = CARD_HEIGHT * scale / 2;
+        return px >= this.x - halfW && px <= this.x + halfW &&
+               py >= this.y - halfH && py <= this.y + halfH;
+    }
+
+    update(dt, engine) {
+        this.hovered = this.containsPoint(engine.mouse.x, engine.mouse.y);
+    }
+
+    render(ctx) {
+        const scale = 0.4;
+        const w = CARD_WIDTH * scale, h = CARD_HEIGHT * scale;
+        const halfW = w / 2, halfH = h / 2;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Stack visual
+        const stackCount = Math.min(4, Math.ceil(this.count / 10));
+        for (let i = stackCount - 1; i >= 0; i--) {
+            ctx.save();
+            ctx.translate(-i * 1.5, -i * 1.5);
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 4;
+
+            const gradient = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+            gradient.addColorStop(0, '#1a3a5c');
+            gradient.addColorStop(1, '#0d1f33');
+            Draw.roundRect(ctx, -halfW, -halfH, w, h, 6);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        ctx.font = '8px PixelFont, monospace';
+        ctx.fillStyle = '#4ecdc4';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('DECK', 0, -6);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(this.count.toString(), 0, 8);
+
+        ctx.restore();
+    }
+}
+
+// Graveyard class
+export class Graveyard {
+    constructor(x, y, isPlayer = true) {
+        this.x = x;
+        this.y = y;
+        this.isPlayer = isPlayer;
+        this.cards = [];
+    }
+
+    get count() { return this.cards.length; }
+
+    add(cardData) {
+        this.cards.push(cardData);
+    }
+
+    render(ctx) {
+        const scale = 0.35;
+        const w = CARD_WIDTH * scale, h = CARD_HEIGHT * scale;
+        const halfW = w / 2, halfH = h / 2;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalAlpha = this.count > 0 ? 0.8 : 0.3;
+
+        Draw.roundRect(ctx, -halfW, -halfH, w, h, 6);
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fill();
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.font = '7px PixelFont, monospace';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('GRAVE', 0, -6);
+        ctx.fillStyle = '#888';
+        ctx.fillText(this.count.toString(), 0, 8);
+
+        ctx.restore();
+    }
+}
+
+// Gate class - can be incremented
+export class Gate {
+    constructor(x, y, isPlayer = true) {
+        this.x = x;
+        this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+        this.isPlayer = isPlayer;
+        this.power = 1;
+        this.hovered = false;
+        this.pulseTime = Math.random() * Math.PI * 2;
+    }
+
+    increment() {
+        this.power++;
+    }
+
+    containsPoint(px, py) {
+        return Math.abs(px - this.x) < 30 && Math.abs(py - this.y) < 30;
+    }
+
+    update(dt, engine) {
+        this.hovered = this.containsPoint(engine.mouse.x, engine.mouse.y);
+        this.pulseTime += dt * 2;
+
+        // Smooth movement
+        this.x += (this.targetX - this.x) * 8 * dt;
+        this.y += (this.targetY - this.y) * 8 * dt;
+    }
+
+    render(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const pulse = Math.sin(this.pulseTime) * 0.1 + 1;
+        const size = 25 * pulse;
+
+        // Outer glow
+        ctx.beginPath();
+        ctx.arc(0, 0, size + 8, 0, Math.PI * 2);
+        ctx.fillStyle = this.isPlayer ? 'rgba(78, 205, 196, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+        ctx.fill();
+
+        // Gate ring
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+        gradient.addColorStop(0, this.isPlayer ? '#0d3d56' : '#3d1515');
+        gradient.addColorStop(1, this.isPlayer ? '#4ecdc4' : '#ef4444');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Inner void
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.fill();
+
+        // Power number
+        ctx.font = '14px PixelFont, monospace';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.power.toString(), 0, 2);
+
+        // Hover effect
+        if (this.hovered) {
+            ctx.beginPath();
+            ctx.arc(0, 0, size + 12, 0, Math.PI * 2);
+            ctx.strokeStyle = this.isPlayer ? '#4ecdc4' : '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+}
+
+// Static display card (for planet, artifact, natives)
+export class DisplayCard {
+    constructor(x, y, data, label) {
+        this.x = x;
+        this.y = y;
+        this.data = data;
+        this.label = label;
+        this.hovered = false;
     }
 
     containsPoint(px, py) {
@@ -37,340 +226,122 @@ export class Deck {
         this.hovered = this.containsPoint(engine.mouse.x, engine.mouse.y);
     }
 
-    render(ctx, engine) {
-        const scale = 0.5;
+    render(ctx) {
+        const scale = this.hovered ? 0.55 : 0.5;
         const w = CARD_WIDTH * scale, h = CARD_HEIGHT * scale;
         const halfW = w / 2, halfH = h / 2;
 
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        const stackCount = Math.min(4, Math.ceil(this.count / 10));
-        for (let i = stackCount - 1; i >= 0; i--) {
-            ctx.save();
-            ctx.translate(-i * 1.5, -i * 1.5);
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetY = 4;
+        // Card shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 5;
 
-            const gradient = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
-            gradient.addColorStop(0, '#2d3561');
-            gradient.addColorStop(1, '#1a1f3a');
-            Draw.roundRect(ctx, -halfW, -halfH, w, h, 8);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            ctx.shadowColor = 'transparent';
-            ctx.strokeStyle = '#00ff88';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.restore();
-        }
+        // Card background
+        const gradient = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+        gradient.addColorStop(0, this.data.color || '#333');
+        gradient.addColorStop(1, '#1a1a2e');
+        Draw.roundRect(ctx, -halfW, -halfH, w, h, 8);
+        ctx.fillStyle = gradient;
+        ctx.fill();
 
-        ctx.font = '10px PixelFont, monospace';
-        ctx.fillStyle = '#00ff88';
+        ctx.shadowColor = 'transparent';
+
+        // Border
+        ctx.strokeStyle = this.data.color || '#666';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Label
+        ctx.font = '7px PixelFont, monospace';
+        ctx.fillStyle = '#888';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('DECK', 0, -8);
-        ctx.font = '10px PixelFont, monospace';
-        ctx.fillText(this.count.toString(), 0, 8);
+        ctx.fillText(this.label, 0, -halfH + 12);
 
-        ctx.restore();
-    }
-}
+        // Name
+        ctx.font = '9px PixelFont, monospace';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(this.data.name, 0, -halfH + 30);
 
-export class Battlefield {
-    constructor(engine, isEnemy = false) {
-        this.engine = engine;
-        this.isEnemy = isEnemy;
-        this.creatures = [];
-        this.spells = [];
-        this.lands = [];
-        this.zIndex = -10;
-    }
-
-    get y() {
-        if (this.isEnemy) {
-            return 140;
-        }
-        return this.engine.height / 2 + 50;
-    }
-
-    get creatureZoneY() { return this.y; }
-    get landZoneY() {
-        // Lands go ABOVE creatures for player, BELOW for enemy
-        return this.y + (this.isEnemy ? CARD_HEIGHT * 0.28 : -CARD_HEIGHT * 0.35);
-    }
-
-    addCard(card) {
-        card.isEnemy = this.isEnemy;
-        if (card.data.type === 'creature') {
-            this.creatures.push(card);
-            this.engine.add(card);
-            card.inBattlefield = true;
-            if (card.data.haste) card.summoningSickness = false;
-            this._layoutCreatures();
-        } else if (card.data.type === 'land') {
-            this.lands.push(card);
-            this.engine.add(card);
-            card.inBattlefield = true;
-            this._layoutLands();
-        } else {
-            this.spells.push(card);
-            this.engine.add(card);
-            card.inBattlefield = true;
-            this._layoutSpells();
-        }
-    }
-
-    _layoutCreatures() {
-        const count = this.creatures.length;
-        if (count === 0) return;
-        const cardScale = this.isEnemy ? 0.35 : 0.4;
-        const spacing = Math.min(CARD_WIDTH * cardScale + 8, (this.engine.width - 200) / Math.max(count, 1));
-        const totalWidth = spacing * (count - 1);
-        const startX = (this.engine.width - totalWidth) / 2;
-
-        this.creatures.forEach((card, i) => {
-            card.baseZIndex = 10 + i;
-            card.zIndex = 10 + i;
-            this.engine.animate(card, {
-                x: startX + spacing * i,
-                y: this.creatureZoneY,
-                rotation: 0,
-                scale: cardScale
-            }, 0.3, 'easeOutBack');
-        });
-    }
-
-    _layoutSpells() {
-        const count = this.spells.length;
-        if (count === 0) return;
-        const cardScale = this.isEnemy ? 0.3 : 0.35;
-        const spacing = Math.min(CARD_WIDTH * cardScale + 8, (this.engine.width - 200) / Math.max(count, 1));
-        const totalWidth = spacing * (count - 1);
-        const startX = (this.engine.width - totalWidth) / 2;
-        // Spells appear briefly at creature zone level
-        const spellY = this.creatureZoneY;
-
-        this.spells.forEach((card, i) => {
-            card.baseZIndex = 5 + i;
-            card.zIndex = 5 + i;
-            this.engine.animate(card, { x: startX + spacing * i, y: spellY, rotation: 0, scale: cardScale }, 0.3, 'easeOutBack');
-        });
-    }
-
-    _layoutLands() {
-        const count = this.lands.length;
-        if (count === 0) return;
-        const cardScale = this.isEnemy ? 0.25 : 0.3;
-        const spacing = Math.min(CARD_WIDTH * cardScale + 6, (this.engine.width - 200) / Math.max(count, 1));
-        const totalWidth = spacing * (count - 1);
-        const startX = (this.engine.width - totalWidth) / 2;
-
-        this.lands.forEach((card, i) => {
-            card.baseZIndex = 2 + i;
-            card.zIndex = 2 + i;
-            this.engine.animate(card, {
-                x: startX + spacing * i,
-                y: this.landZoneY,
-                rotation: 0,
-                scale: cardScale
-            }, 0.3, 'easeOutBack');
-        });
-    }
-
-    removeCard(card) {
-        for (const arr of [this.creatures, this.spells, this.lands]) {
-            const idx = arr.indexOf(card);
-            if (idx !== -1) {
-                arr.splice(idx, 1);
-                this.engine.remove(card);
-                if (arr === this.creatures) this._layoutCreatures();
-                else if (arr === this.spells) this._layoutSpells();
-                else this._layoutLands();
-                return;
-            }
-        }
-    }
-
-    untapAll() {
-        this.lands.forEach(l => l.tapped = false);
-        this.creatures.forEach(c => c.tapped = false);
-    }
-
-    removeSummoningSickness() {
-        this.creatures.forEach(c => c.summoningSickness = false);
-    }
-
-    update(dt, engine) {}
-
-    render(ctx, engine) {
-        const zoneWidth = engine.width - 200;
-        const zoneX = 90;
-
-        ctx.save();
-        ctx.globalAlpha = 0.06;
-
-        // Creature zone (smaller to match compact cards)
-        const czH = CARD_HEIGHT * 0.35;
-        const czY = this.creatureZoneY - czH / 2;
-        ctx.fillStyle = this.isEnemy ? '#ef4444' : '#ff6b6b';
-        Draw.roundRect(ctx, zoneX, czY, zoneWidth, czH, 6);
+        // Type icon area
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fill();
-
-        ctx.globalAlpha = 0.4;
-        ctx.strokeStyle = this.isEnemy ? '#ef4444' : '#ff6b6b';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = this.data.color || '#666';
+        ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.setLineDash([]);
 
-        // Land zone (above creatures for player, below for enemy)
-        ctx.globalAlpha = 0.06;
-        const lzH = CARD_HEIGHT * 0.25;
-        const lzY = this.landZoneY - lzH / 2;
-        ctx.fillStyle = '#a855f7';
-        Draw.roundRect(ctx, zoneX, lzY, zoneWidth, lzH, 6);
-        ctx.fill();
+        // Type symbol
+        ctx.font = '12px PixelFont, monospace';
+        ctx.fillStyle = this.data.color || '#fff';
+        if (this.data.type === 'planet') ctx.fillText('P', 0, 4);
+        else if (this.data.type === 'artifact') ctx.fillText('A', 0, 4);
+        else if (this.data.type === 'natives') ctx.fillText('N', 0, 4);
 
-        ctx.globalAlpha = 0.4;
-        ctx.strokeStyle = '#a855f7';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Labels
+        // Effect text
         ctx.font = '6px PixelFont, monospace';
-        ctx.globalAlpha = 0.5;
-        ctx.textAlign = 'left';
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(this.data.effect, 0, halfH - 20);
 
-        ctx.fillStyle = this.isEnemy ? '#ef4444' : '#ff6b6b';
-        ctx.fillText(this.isEnemy ? 'ENEMY' : 'CREATURES', zoneX + 6, czY + 8);
-
-        ctx.fillStyle = '#a855f7';
-        ctx.fillText(this.isEnemy ? 'LANDS' : 'LANDS', zoneX + 6, lzY + 8);
+        // Stat
+        ctx.font = '8px PixelFont, monospace';
+        ctx.fillStyle = this.data.color || '#fff';
+        if (this.data.resources) ctx.fillText(`RES: ${this.data.resources}`, 0, halfH - 8);
+        else if (this.data.power) ctx.fillText(`PWR: ${this.data.power}`, 0, halfH - 8);
+        else if (this.data.hostility) ctx.fillText(`HOST: ${this.data.hostility}`, 0, halfH - 8);
 
         ctx.restore();
     }
 }
 
-export class Hand {
-    constructor(engine, isEnemy = false) {
-        this.engine = engine;
-        this.isEnemy = isEnemy;
-        this.cards = [];
-        this.maxCards = 10;
-    }
-
-    get count() { return this.cards.length; }
-
-    addCard(cardData, fromX, fromY) {
-        const card = new Card(cardData, fromX, fromY);
-        card.scale = 0.3;
-        card.alpha = 0;
-        card.inHand = true;
-        card.isEnemy = this.isEnemy;
-        this.cards.push(card);
-        if (!this.isEnemy) this.engine.add(card);
-        this._layoutCards();
-        return card;
-    }
-
-    _layoutCards() {
-        const count = this.cards.length;
-        if (count === 0) return;
-
-        if (this.isEnemy) {
-            // Enemy hand is hidden, just track count
-            return;
-        }
-
-        const cardScale = 0.45;
-        const spacing = Math.min(CARD_WIDTH * cardScale * 0.7, (this.engine.width - 150) / Math.max(count, 1));
-        const totalWidth = spacing * (count - 1);
-        const startX = (this.engine.width - totalWidth) / 2;
-        const y = this.engine.height - CARD_HEIGHT * cardScale / 2 - 15;
-        const arcHeight = 12;
-
-        this.cards.forEach((card, i) => {
-            const t = count === 1 ? 0.5 : i / (count - 1);
-            const arcOffset = -arcHeight * 4 * (t - 0.5) * (t - 0.5) + arcHeight;
-            card.baseZIndex = 50 + i;
-            card.zIndex = 50 + i;
-            this.engine.animate(card, {
-                x: startX + spacing * i,
-                y: y - arcOffset,
-                rotation: (t - 0.5) * 5,
-                scale: cardScale,
-                alpha: 1
-            }, 0.4, 'easeOutBack');
-        });
-    }
-
-    removeCard(card) {
-        const idx = this.cards.indexOf(card);
-        if (idx !== -1) {
-            this.cards.splice(idx, 1);
-            if (!this.isEnemy) this.engine.remove(card);
-            card.inHand = false;
-            this._layoutCards();
-            return true;
-        }
-        return false;
-    }
-}
-
-export class ManaPool {
-    constructor() { this.current = 0; }
-    add(n) { this.current += n; }
-    spend(n) { if (this.current >= n) { this.current -= n; return true; } return false; }
-    canAfford(n) { return this.current >= n; }
-    reset() { this.current = 0; }
-}
-
+// Main Game class
 export class Game {
     constructor(engine) {
         this.engine = engine;
 
-        // Player
-        this.deck = new Deck(engine.width - 120, engine.height - 180);
-        this.hand = new Hand(engine, false);
-        this.battlefield = new Battlefield(engine, false);
-        this.manaPool = new ManaPool();
+        // Draw static cards at game start
+        this.planet = pickRandom(planetDeck);
+        this.artifact = pickRandom(artifactDeck);
+        this.natives = pickRandom(nativesDeck);
 
-        // Enemy
-        this.enemyDeck = new Deck(engine.width - 120, 80);
-        this.enemyHand = new Hand(engine, true);
-        this.enemyBattlefield = new Battlefield(engine, true);
-        this.enemyMana = new ManaPool();
+        // Player 1 (bottom)
+        this.p1Deck = new Deck(0, 0, true);
+        this.p1Graveyard = new Graveyard(0, 0, true);
+        this.p1Gates = [new Gate(0, 0, true)];
+        this.p1Orbit = [];
+        this.p1Planet = [];
 
-        this.engine.add(this.deck);
-        this.engine.add(this.battlefield);
-        this.engine.add(this.enemyBattlefield);
+        // Player 2 (top)
+        this.p2Deck = new Deck(0, 0, false);
+        this.p2Graveyard = new Graveyard(0, 0, false);
+        this.p2Gates = [new Gate(0, 0, false)];
+        this.p2Orbit = [];
+        this.p2Planet = [];
 
-        // Health
-        this.playerHealth = 20;
-        this.enemyHealth = 20;
+        // Display cards
+        this.planetCard = new DisplayCard(0, 0, this.planet, 'PLANET');
+        this.artifactCard = new DisplayCard(0, 0, this.artifact, 'ARTIFACT');
+        this.nativesCard = new DisplayCard(0, 0, this.natives, 'NATIVES');
 
-        this.landPlayedThisTurn = false;
+        // Game state
         this.turn = 1;
-        this.isPlayerTurn = true;
+        this.isPlayer1Turn = true;
+        this.gateActionUsed = false;
         this.gameOver = false;
         this.winner = null;
 
         this.message = '';
         this.messageTimer = 0;
 
-        this.enemyActionQueue = [];
-        this.enemyActionTimer = 0;
-
-        // Combat/blocking state
-        this.combatPhase = 'none'; // 'none', 'declare_blockers', 'player_attack'
-        this.attackingCreatures = [];
-        this.playerAttackers = []; // Player's attacking creatures
-        this.selectedBlocker = null;
-        this.blockerAssignments = new Map(); // attacker -> blocker
+        // Board dimensions (calculated in update)
+        this.boardX = 0;
+        this.boardY = 0;
+        this.boardW = 0;
+        this.boardH = 0;
+        this.midY = 0;
     }
 
     showMessage(msg, duration = 2) {
@@ -378,839 +349,304 @@ export class Game {
         this.messageTimer = duration;
     }
 
-    // Player ends turn
-    endPlayerTurn() {
-        // Clear any pending attackers
-        this.cancelPlayerAttack();
-
-        this.isPlayerTurn = false;
-        this.showMessage("Enemy's turn...");
-        this.startEnemyTurn();
+    // Get current player's gates
+    get currentGates() {
+        return this.isPlayer1Turn ? this.p1Gates : this.p2Gates;
     }
 
-    startEnemyTurn() {
-        this.enemyMana.reset();
-        this.enemyBattlefield.untapAll();
-        this.enemyBattlefield.removeSummoningSickness();
-
-        // Enemy draws
-        if (this.enemyDeck.count > 0 && this.enemyHand.count < 10) {
-            const cardData = this.enemyDeck.draw();
-            if (cardData) this.enemyHand.addCard(cardData, this.enemyDeck.x, this.enemyDeck.y);
+    // Add a new gate for current player
+    addGate() {
+        if (this.gateActionUsed) {
+            this.showMessage('Already used gate action!');
+            return false;
         }
-
-        // Queue enemy actions
-        this.enemyActionQueue = [];
-        this.planEnemyActions();
-        this.enemyActionTimer = 0.5;
+        const gates = this.currentGates;
+        const newGate = new Gate(0, 0, this.isPlayer1Turn);
+        gates.push(newGate);
+        this.gateActionUsed = true;
+        this.showMessage('New gate added!');
+        this._layoutGates();
+        return true;
     }
 
-    planEnemyActions() {
-        const hand = this.enemyHand.cards.slice();
-
-        // Play a land first
-        const land = hand.find(c => c.data.type === 'land');
-        if (land) {
-            this.enemyActionQueue.push({ type: 'playLand', card: land });
+    // Increment a gate
+    incrementGate(gate) {
+        if (this.gateActionUsed) {
+            this.showMessage('Already used gate action!');
+            return false;
         }
-
-        // Tap all lands for mana
-        this.enemyActionQueue.push({ type: 'tapLands' });
-
-        // Play affordable cards (prioritize creatures, then damage spells)
-        const sorted = hand
-            .filter(c => c.data.type !== 'land')
-            .sort((a, b) => {
-                if (a.data.type === 'creature' && b.data.type !== 'creature') return -1;
-                if (b.data.type === 'creature' && a.data.type !== 'creature') return 1;
-                return b.data.cost - a.data.cost; // Higher cost first
-            });
-
-        for (const card of sorted) {
-            this.enemyActionQueue.push({ type: 'tryPlay', card });
-        }
-
-        // Attack with all creatures
-        this.enemyActionQueue.push({ type: 'attackAll' });
-
-        // End turn
-        this.enemyActionQueue.push({ type: 'endTurn' });
+        gate.increment();
+        this.gateActionUsed = true;
+        this.showMessage(`Gate upgraded to ${gate.power}!`);
+        return true;
     }
 
-    executeEnemyAction() {
-        if (this.enemyActionQueue.length === 0) return;
-
-        const action = this.enemyActionQueue.shift();
-
-        switch (action.type) {
-            case 'playLand':
-                if (this.enemyHand.removeCard(action.card)) {
-                    this.enemyBattlefield.addCard(action.card);
-                    this.showMessage('Enemy plays a land');
-                }
-                break;
-
-            case 'tapLands':
-                for (const land of this.enemyBattlefield.lands) {
-                    if (!land.tapped) {
-                        land.tapped = true;
-                        this.enemyMana.add(land.data.manaProduction || 1);
-                    }
-                }
-                break;
-
-            case 'tryPlay':
-                const card = action.card;
-                if (this.enemyHand.cards.includes(card) && this.enemyMana.canAfford(card.data.cost)) {
-                    this.enemyMana.spend(card.data.cost);
-                    this.enemyHand.removeCard(card);
-                    this.enemyBattlefield.addCard(card);
-
-                    if (card.data.type === 'spell') {
-                        this.executeEnemySpell(card);
-                    } else {
-                        this.showMessage(`Enemy summons ${card.data.name}!`);
-                    }
-                }
-                break;
-
-            case 'attackAll':
-                // Gather attackers
-                this.attackingCreatures = [];
-                for (const creature of this.enemyBattlefield.creatures) {
-                    if (!creature.tapped && !creature.summoningSickness) {
-                        creature.tapped = true;
-                        creature.isAttacking = true;
-                        this.attackingCreatures.push(creature);
-                    }
-                }
-
-                if (this.attackingCreatures.length > 0) {
-                    // Check if player has untapped creatures to block with
-                    const canBlock = this.battlefield.creatures.some(c => !c.tapped);
-                    if (canBlock) {
-                        // Enter blocking phase
-                        this.combatPhase = 'declare_blockers';
-                        this.blockerAssignments.clear();
-                        this.selectedBlocker = null;
-                        this.showMessage('Declare blockers! Click your creature, then an attacker.', 5);
-                        return; // Pause enemy turn for blocking
-                    } else {
-                        // No blockers, deal damage immediately
-                        this.resolveCombat();
-                    }
-                }
-                break;
-
-            case 'endTurn':
-                this.startPlayerTurn();
-                break;
-        }
-    }
-
-    executeEnemySpell(card) {
-        const effect = card.data.spellEffect;
-        if (effect === 'damage') {
-            const dmg = card.data.damage || 0;
-            this.playerHealth -= dmg;
-            this.showMessage(`Enemy's ${card.data.name} hits you for ${dmg}!`);
-            if (this.playerHealth <= 0) {
-                this.playerHealth = 0;
-                this.gameOver = true;
-                this.winner = 'enemy';
-            }
-        } else if (effect === 'heal') {
-            this.enemyHealth += (card.data.healAmount || 0);
-            this.showMessage(`Enemy heals for ${card.data.healAmount}!`);
-        } else if (effect === 'draw') {
-            const cnt = card.data.drawCount || 1;
-            for (let i = 0; i < cnt && this.enemyDeck.count > 0; i++) {
-                const c = this.enemyDeck.draw();
-                if (c) this.enemyHand.addCard(c, this.enemyDeck.x, this.enemyDeck.y);
-            }
-        }
-        setTimeout(() => this.enemyBattlefield.removeCard(card), 800);
-    }
-
-    startPlayerTurn() {
+    endTurn() {
+        this.isPlayer1Turn = !this.isPlayer1Turn;
+        this.gateActionUsed = false;
         this.turn++;
-        this.isPlayerTurn = true;
-        this.landPlayedThisTurn = false;
-        this.manaPool.reset();
-        this.battlefield.untapAll();
-        this.battlefield.removeSummoningSickness();
-        this.drawCard();
-        this.showMessage(`Turn ${this.turn} - Your turn!`);
+        this.showMessage(this.isPlayer1Turn ? "Player 1's turn" : "Player 2's turn");
     }
 
-    drawCard() {
-        if (this.deck.count === 0 || this.hand.count >= 10) return false;
-        const cardData = this.deck.draw();
-        if (cardData) {
-            this.hand.addCard(cardData, this.deck.x, this.deck.y);
-            return true;
-        }
-        return false;
+    _layoutGates() {
+        // Layout P1 gates
+        const p1GateY = this.boardY + this.boardH - 50;
+        const p1Count = this.p1Gates.length;
+        const p1Spacing = Math.min(80, (this.boardW / 2 - 60) / Math.max(p1Count, 1));
+        const p1StartX = this.boardX + this.boardW / 4 - (p1Count - 1) * p1Spacing / 2;
+        this.p1Gates.forEach((gate, i) => {
+            gate.targetX = p1StartX + i * p1Spacing;
+            gate.targetY = p1GateY;
+        });
+
+        // Layout P2 gates
+        const p2GateY = this.boardY + 50;
+        const p2Count = this.p2Gates.length;
+        const p2Spacing = Math.min(80, (this.boardW / 2 - 60) / Math.max(p2Count, 1));
+        const p2StartX = this.boardX + this.boardW * 3 / 4 - (p2Count - 1) * p2Spacing / 2;
+        this.p2Gates.forEach((gate, i) => {
+            gate.targetX = p2StartX + i * p2Spacing;
+            gate.targetY = p2GateY;
+        });
     }
 
-    tapLandForMana(card) {
-        if (card.data.type !== 'land' || card.tapped) return false;
-        card.tapped = true;
-        this.manaPool.add(card.data.manaProduction || 1);
-        return true;
-    }
+    update(dt, engine) {
+        if (this.messageTimer > 0) this.messageTimer -= dt;
 
-    attackWithCreature(card) {
-        if (card.data.type !== 'creature' || card.tapped) {
-            this.showMessage('Already tapped!');
-            return false;
-        }
-        if (card.summoningSickness) {
-            this.showMessage('Summoning sickness!');
-            return false;
-        }
+        // Calculate board dimensions
+        const margin = 20;
+        const sideWidth = 120;
+        this.boardX = margin;
+        this.boardY = margin;
+        this.boardW = engine.width - margin * 2 - sideWidth;
+        this.boardH = engine.height - margin * 2;
+        this.midY = this.boardY + this.boardH / 2;
 
-        // Toggle attack state
-        if (card.isAttacking) {
-            card.isAttacking = false;
-            const idx = this.playerAttackers.indexOf(card);
-            if (idx !== -1) this.playerAttackers.splice(idx, 1);
-            this.showMessage('Attack cancelled');
-        } else {
-            card.isAttacking = true;
-            this.playerAttackers.push(card);
-            this.showMessage(`${card.data.name} ready to attack!`);
-        }
-        return true;
-    }
+        // Update positions
+        this.p1Deck.x = this.boardX + this.boardW + 60;
+        this.p1Deck.y = engine.height - 80;
+        this.p1Graveyard.x = this.boardX + this.boardW + 60;
+        this.p1Graveyard.y = engine.height - 180;
 
-    confirmPlayerAttack() {
-        if (this.playerAttackers.length === 0) {
-            this.showMessage('No attackers selected!');
-            return;
-        }
+        this.p2Deck.x = this.boardX + this.boardW + 60;
+        this.p2Deck.y = 80;
+        this.p2Graveyard.x = this.boardX + this.boardW + 60;
+        this.p2Graveyard.y = 180;
 
-        // Tap all attackers
-        for (const attacker of this.playerAttackers) {
-            attacker.tapped = true;
-        }
+        // Display cards on the right side
+        const sideX = this.boardX + this.boardW + 60;
+        this.planetCard.x = sideX;
+        this.planetCard.y = this.midY - 130;
+        this.artifactCard.x = sideX;
+        this.artifactCard.y = this.midY;
+        this.nativesCard.x = sideX;
+        this.nativesCard.y = this.midY + 130;
 
-        // Check if enemy has untapped creatures to block
-        const canBlock = this.enemyBattlefield.creatures.some(c => !c.tapped);
+        // Layout gates
+        this._layoutGates();
 
-        if (canBlock) {
-            // Enemy AI assigns blockers
-            this.enemyAssignBlockers();
-        }
+        // Update all objects
+        this.p1Deck.update(dt, engine);
+        this.p2Deck.update(dt, engine);
+        this.p1Gates.forEach(g => g.update(dt, engine));
+        this.p2Gates.forEach(g => g.update(dt, engine));
+        this.planetCard.update(dt, engine);
+        this.artifactCard.update(dt, engine);
+        this.nativesCard.update(dt, engine);
 
-        // Resolve combat
-        this.resolvePlayerAttack();
-    }
-
-    enemyAssignBlockers() {
-        // Simple AI: block the highest attack creatures first
-        const availableBlockers = this.enemyBattlefield.creatures.filter(c => !c.tapped);
-        const sortedAttackers = [...this.playerAttackers].sort((a, b) => b.attack - a.attack);
-
-        for (const attacker of sortedAttackers) {
-            if (availableBlockers.length === 0) break;
-
-            // Find best blocker (can survive or trade)
-            let bestBlocker = null;
-            let bestScore = -Infinity;
-
-            for (const blocker of availableBlockers) {
-                // Flying check - only flying can block flying
-                if (attacker.data.flying && !blocker.data.flying) continue;
-
-                let score = 0;
-                // Prefer blockers that can kill the attacker
-                if (blocker.attack >= attacker.currentHealth) score += 10;
-                // Prefer blockers that can survive
-                if (blocker.currentHealth > attacker.attack) score += 5;
-                // Prefer lower value blockers
-                score -= blocker.data.cost;
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestBlocker = blocker;
-                }
-            }
-
-            if (bestBlocker && bestScore > -5) {
-                this.blockerAssignments.set(attacker, bestBlocker);
-                bestBlocker.isBlocking = attacker;
-                availableBlockers.splice(availableBlockers.indexOf(bestBlocker), 1);
-            }
-        }
-    }
-
-    resolvePlayerAttack() {
-        for (const attacker of this.playerAttackers) {
-            const blocker = this.blockerAssignments.get(attacker);
-
-            if (blocker) {
-                // Combat between attacker and blocker
-                const damageToBlocker = attacker.attack;
-                const damageToAttacker = blocker.attack;
-
-                blocker.currentHealth -= damageToBlocker;
-                attacker.currentHealth -= damageToAttacker;
-
-                this.showMessage(`${attacker.data.name} blocked by ${blocker.data.name}!`, 1.5);
-
-                // Lifelink - heal when dealing damage
-                if (attacker.data.lifelink && damageToBlocker > 0) {
-                    this.playerHealth += damageToBlocker;
-                    this.showMessage(`Lifelink: +${damageToBlocker} HP!`, 1);
-                }
-
-                // Trample - excess damage goes through
-                if (attacker.data.trample && blocker.currentHealth < 0) {
-                    const excessDamage = Math.abs(blocker.currentHealth);
-                    this.enemyHealth -= excessDamage;
-                    this.showMessage(`Trample: ${excessDamage} damage to enemy!`, 1);
-                    if (this.enemyHealth <= 0) {
-                        this.enemyHealth = 0;
-                        this.gameOver = true;
-                        this.winner = 'player';
-                    }
-                }
-
-                // Check for deaths
-                if (blocker.currentHealth <= 0) {
-                    blocker.isBlocking = null;
-                    setTimeout(() => {
-                        this.enemyBattlefield.removeCard(blocker);
-                    }, 300);
-                }
-                if (attacker.currentHealth <= 0) {
-                    setTimeout(() => {
-                        this.battlefield.removeCard(attacker);
-                    }, 300);
-                }
-            } else {
-                // Unblocked - damage goes to enemy
-                const damage = attacker.attack;
-                this.enemyHealth -= damage;
-                this.showMessage(`${attacker.data.name} hits enemy for ${damage}!`, 1.5);
-
-                // Lifelink - heal when dealing damage
-                if (attacker.data.lifelink) {
-                    this.playerHealth += damage;
-                    this.showMessage(`Lifelink: +${damage} HP!`, 1);
-                }
-
-                if (this.enemyHealth <= 0) {
-                    this.enemyHealth = 0;
-                    this.gameOver = true;
-                    this.winner = 'player';
-                    this.showMessage('VICTORY!', 999);
-                }
-            }
-
-            attacker.isAttacking = false;
-        }
-
-        // Clear enemy blocking flags
-        for (const creature of this.enemyBattlefield.creatures) {
-            creature.isBlocking = null;
-        }
-
-        // Clear attack state
-        this.playerAttackers = [];
-        this.blockerAssignments.clear();
-    }
-
-    cancelPlayerAttack() {
-        for (const attacker of this.playerAttackers) {
-            attacker.isAttacking = false;
-        }
-        this.playerAttackers = [];
-        this.showMessage('Attack cancelled');
-    }
-
-    resolveCombat() {
-        // Process each attacker (enemy attacking player)
-        for (const attacker of this.attackingCreatures) {
-            const blocker = this.blockerAssignments.get(attacker);
-
-            if (blocker) {
-                // Combat between attacker and blocker
-                const damageToBlocker = attacker.attack;
-                const damageToAttacker = blocker.attack;
-
-                blocker.currentHealth -= damageToBlocker;
-                attacker.currentHealth -= damageToAttacker;
-
-                this.showMessage(`${blocker.data.name} blocks ${attacker.data.name}!`, 1.5);
-
-                // Enemy lifelink - heal enemy when dealing damage
-                if (attacker.data.lifelink && damageToBlocker > 0) {
-                    this.enemyHealth += damageToBlocker;
-                }
-
-                // Enemy trample - excess damage goes through to player
-                if (attacker.data.trample && blocker.currentHealth < 0) {
-                    const excessDamage = Math.abs(blocker.currentHealth);
-                    this.playerHealth -= excessDamage;
-                    this.showMessage(`Trample: ${excessDamage} damage to you!`, 1);
-                    if (this.playerHealth <= 0) {
-                        this.playerHealth = 0;
-                        this.gameOver = true;
-                        this.winner = 'enemy';
-                    }
-                }
-
-                // Check for deaths
-                if (blocker.currentHealth <= 0) {
-                    setTimeout(() => {
-                        this.battlefield.removeCard(blocker);
-                    }, 300);
-                }
-                if (attacker.currentHealth <= 0) {
-                    setTimeout(() => {
-                        this.enemyBattlefield.removeCard(attacker);
-                    }, 300);
-                }
-            } else {
-                // Unblocked - damage goes to player
-                const damage = attacker.attack;
-                this.playerHealth -= damage;
-                this.showMessage(`${attacker.data.name} hits you for ${damage}!`, 1.5);
-
-                // Enemy lifelink
-                if (attacker.data.lifelink) {
-                    this.enemyHealth += damage;
-                }
-
-                if (this.playerHealth <= 0) {
-                    this.playerHealth = 0;
-                    this.gameOver = true;
-                    this.winner = 'enemy';
-                    this.showMessage('YOU LOSE!', 999);
-                }
-            }
-
-            attacker.isAttacking = false;
-        }
-
-        // Clear blocking flags on all player creatures
-        for (const creature of this.battlefield.creatures) {
-            creature.isBlocking = null;
-            creature.isSelectedBlocker = false;
-        }
-
-        // Clear combat state
-        this.attackingCreatures = [];
-        this.blockerAssignments.clear();
-        this.selectedBlocker = null;
-        this.combatPhase = 'none';
-
-        // Continue enemy turn
-        if (!this.gameOver) {
-            this.enemyActionTimer = 0.8;
-        }
-    }
-
-    confirmBlockers() {
-        this.resolveCombat();
-    }
-
-    handleBlockerSelection(engine) {
-        if (!engine.mouse.clicked) return;
-
-        // Check if clicked "Confirm Blockers" button
-        const bx = engine.width / 2, by = engine.height / 2 + 80;
-        const bw = 160, bh = 40;
-        if (engine.mouse.x >= bx - bw/2 && engine.mouse.x <= bx + bw/2 &&
-            engine.mouse.y >= by - bh/2 && engine.mouse.y <= by + bh/2) {
-            this.confirmBlockers();
-            return;
-        }
-
-        // Check if clicked a player creature (to select as blocker)
-        for (const creature of this.battlefield.creatures) {
-            if (creature.hovered && !creature.tapped) {
-                // Toggle selection
-                if (this.selectedBlocker === creature) {
-                    this.selectedBlocker = null;
-                    creature.isSelectedBlocker = false;
-                } else {
-                    if (this.selectedBlocker) {
-                        this.selectedBlocker.isSelectedBlocker = false;
-                    }
-                    this.selectedBlocker = creature;
-                    creature.isSelectedBlocker = true;
-                    this.showMessage(`Selected ${creature.data.name} as blocker`, 1.5);
-                }
-                return;
-            }
-        }
-
-        // Check if clicked an attacking enemy creature (to assign blocker)
-        if (this.selectedBlocker) {
-            for (const attacker of this.attackingCreatures) {
-                if (attacker.hovered) {
-                    // Check flying - only flying can block flying
-                    if (attacker.data.flying && !this.selectedBlocker.data.flying) {
-                        this.showMessage("Can't block flying with ground unit!", 1.5);
-                        return;
-                    }
-
-                    // Remove this blocker from any previous assignment
-                    for (const [atk, blk] of this.blockerAssignments) {
-                        if (blk === this.selectedBlocker) {
-                            this.blockerAssignments.delete(atk);
-                            break;
-                        }
-                    }
-
-                    // Assign blocker to this attacker
-                    this.blockerAssignments.set(attacker, this.selectedBlocker);
-                    this.selectedBlocker.isBlocking = attacker;
-                    this.showMessage(`${this.selectedBlocker.data.name} will block ${attacker.data.name}`, 1.5);
-
-                    this.selectedBlocker.isSelectedBlocker = false;
-                    this.selectedBlocker = null;
+        // Handle clicks
+        if (engine.mouse.clicked) {
+            // Check gate clicks for current player
+            const gates = this.currentGates;
+            for (const gate of gates) {
+                if (gate.hovered) {
+                    this.incrementGate(gate);
                     return;
                 }
             }
         }
     }
 
-    executeSpellEffect(card) {
-        const effect = card.data.spellEffect;
-        if (effect === 'damage') {
-            this.enemyHealth -= card.data.damage || 0;
-            this.showMessage(`${card.data.name} deals ${card.data.damage}!`);
-            if (this.enemyHealth <= 0) {
-                this.enemyHealth = 0;
-                this.gameOver = true;
-                this.winner = 'player';
-            }
-        } else if (effect === 'heal') {
-            this.playerHealth += (card.data.healAmount || 0);
-            this.showMessage(`Healed ${card.data.healAmount} HP!`);
-        } else if (effect === 'draw') {
-            for (let i = 0; i < (card.data.drawCount || 1); i++) {
-                setTimeout(() => this.drawCard(), i * 150);
-            }
-            this.showMessage(`Draw ${card.data.drawCount} cards!`);
-        }
-        setTimeout(() => this.battlefield.removeCard(card), 800);
+    renderBoard(ctx, engine) {
+        const { boardX, boardY, boardW, boardH, midY } = this;
+
+        // Board background
+        ctx.fillStyle = '#0a0a15';
+        Draw.roundRect(ctx, boardX, boardY, boardW, boardH, 12);
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Dividing line
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 5]);
+        ctx.beginPath();
+        ctx.moveTo(boardX, midY);
+        ctx.lineTo(boardX + boardW, midY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Zone heights
+        const zoneH = boardH / 2 / 3;
+
+        // Player 1 zones (bottom half) - Gate at bottom, Planet at middle
+        this._renderZone(ctx, 'GATE', boardX, midY + zoneH * 2, boardW / 2, zoneH, '#4ecdc4', 0.15);
+        this._renderZone(ctx, 'ORBIT', boardX, midY + zoneH, boardW / 2, zoneH, '#60a5fa', 0.1);
+        this._renderZone(ctx, 'PLANET', boardX, midY, boardW / 2, zoneH, '#fbbf24', 0.1);
+
+        // Player 2 zones (top half) - Gate at top, Planet at middle
+        this._renderZone(ctx, 'GATE', boardX + boardW / 2, boardY, boardW / 2, zoneH, '#ef4444', 0.15);
+        this._renderZone(ctx, 'ORBIT', boardX + boardW / 2, boardY + zoneH, boardW / 2, zoneH, '#f97316', 0.1);
+        this._renderZone(ctx, 'PLANET', boardX + boardW / 2, boardY + zoneH * 2, boardW / 2, zoneH, '#fbbf24', 0.1);
+
+        // Player labels
+        ctx.font = '10px PixelFont, monospace';
+        ctx.fillStyle = '#4ecdc4';
+        ctx.textAlign = 'left';
+        ctx.fillText('PLAYER 1', boardX + 10, boardY + boardH - 10);
+
+        ctx.fillStyle = '#ef4444';
+        ctx.textAlign = 'right';
+        ctx.fillText('PLAYER 2', boardX + boardW - 10, boardY + 20);
+
+        // Central planet indicator
+        ctx.beginPath();
+        ctx.arc(boardX + boardW / 2, midY, 30, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.1)';
+        ctx.fill();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = '8px PixelFont, monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = 'center';
+        ctx.fillText('CONTESTED', boardX + boardW / 2, midY + 4);
     }
 
-    playCard(card) {
-        if (this.gameOver || !this.isPlayerTurn) return false;
+    _renderZone(ctx, label, x, y, w, h, color, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x + 5, y + 5, w - 10, h - 10);
+        ctx.setLineDash([]);
+        ctx.restore();
 
-        if (card.data.type === 'land') {
-            if (this.landPlayedThisTurn) {
-                this.showMessage('Already played a land!');
-                return false;
-            }
-            this.landPlayedThisTurn = true;
-            this.hand.removeCard(card);
-            this.battlefield.addCard(card);
-            this.showMessage('Land played!');
-            return true;
-        }
-
-        if (!this.manaPool.canAfford(card.data.cost)) {
-            this.showMessage(`Need ${card.data.cost} mana!`);
-            return false;
-        }
-
-        this.manaPool.spend(card.data.cost);
-        this.hand.removeCard(card);
-        this.battlefield.addCard(card);
-
-        if (card.data.type === 'spell') {
-            this.executeSpellEffect(card);
-        } else {
-            this.showMessage(`Summoned ${card.data.name}!`);
-        }
-        return true;
-    }
-
-    update(dt, engine) {
-        if (this.gameOver) return;
-
-        if (this.messageTimer > 0) this.messageTimer -= dt;
-
-        // Update deck positions
-        this.deck.x = engine.width - 100;
-        this.deck.y = engine.height - 100;
-        this.enemyDeck.x = engine.width - 100;
-        this.enemyDeck.y = 100;
-
-        // Blocking phase - player declares blockers during enemy turn
-        if (this.combatPhase === 'declare_blockers') {
-            this.handleBlockerSelection(engine);
-            return;
-        }
-
-        // Enemy turn logic
-        if (!this.isPlayerTurn) {
-            this.enemyActionTimer -= dt;
-            if (this.enemyActionTimer <= 0 && this.enemyActionQueue.length > 0) {
-                this.executeEnemyAction();
-                this.enemyActionTimer = 0.6;
-            }
-            return;
-        }
-
-        // Player input
-        if (engine.mouse.clicked) {
-            for (let i = this.battlefield.creatures.length - 1; i >= 0; i--) {
-                const c = this.battlefield.creatures[i];
-                if (c.hovered) { this.attackWithCreature(c); return; }
-            }
-
-            for (let i = this.battlefield.lands.length - 1; i >= 0; i--) {
-                const l = this.battlefield.lands[i];
-                if (l.hovered && !l.tapped) { this.tapLandForMana(l); return; }
-            }
-
-            for (let i = this.hand.cards.length - 1; i >= 0; i--) {
-                const c = this.hand.cards[i];
-                if (c.hovered) { this.playCard(c); return; }
-            }
-        }
+        ctx.font = '6px PixelFont, monospace';
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.6;
+        ctx.textAlign = 'left';
+        ctx.fillText(label, x + 10, y + 15);
+        ctx.globalAlpha = 1;
     }
 
     renderUI(ctx, engine) {
-        ctx.save();
+        // Render board
+        this.renderBoard(ctx, engine);
 
-        // Mana orb
-        ctx.beginPath();
-        ctx.arc(40, 70, 25, 0, Math.PI * 2);
-        const mg = ctx.createRadialGradient(36, 66, 0, 40, 70, 25);
-        mg.addColorStop(0, '#60a5fa');
-        mg.addColorStop(1, '#1e40af');
-        ctx.fillStyle = mg;
-        ctx.fill();
-        ctx.strokeStyle = '#93c5fd';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+        // Render decks and graveyards
+        this.p1Deck.render(ctx);
+        this.p2Deck.render(ctx);
+        this.p1Graveyard.render(ctx);
+        this.p2Graveyard.render(ctx);
 
-        ctx.font = '16px PixelFont, monospace';
-        ctx.fillStyle = '#fff';
+        // Render display cards
+        this.planetCard.render(ctx);
+        this.artifactCard.render(ctx);
+        this.nativesCard.render(ctx);
+
+        // Render gates
+        this.p1Gates.forEach(g => g.render(ctx));
+        this.p2Gates.forEach(g => g.render(ctx));
+
+        // Turn indicator
+        ctx.font = '10px PixelFont, monospace';
+        ctx.fillStyle = this.isPlayer1Turn ? '#4ecdc4' : '#ef4444';
         ctx.textAlign = 'center';
-        ctx.fillText(this.manaPool.current.toString(), 40, 72);
+        ctx.fillText(
+            this.isPlayer1Turn ? "PLAYER 1'S TURN" : "PLAYER 2'S TURN",
+            this.boardX + this.boardW / 2,
+            this.boardY - 5
+        );
 
-        ctx.font = '8px PixelFont, monospace';
-        ctx.fillStyle = '#60a5fa';
-        ctx.textAlign = 'left';
-        ctx.fillText('MANA', 70, 65);
         ctx.fillStyle = '#888';
-        ctx.fillText(`Turn ${this.turn}`, 70, 78);
+        ctx.fillText(`Turn ${this.turn}`, this.boardX + this.boardW / 2, engine.height - 5);
 
-        // Player HP
-        ctx.beginPath();
-        ctx.arc(45, engine.height - 55, 30, 0, Math.PI * 2);
-        const pg = ctx.createRadialGradient(40, engine.height - 60, 0, 45, engine.height - 55, 30);
-        pg.addColorStop(0, '#22c55e');
-        pg.addColorStop(1, '#15803d');
-        ctx.fillStyle = pg;
-        ctx.fill();
-        ctx.strokeStyle = '#86efac';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.font = '18px PixelFont, monospace';
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.playerHealth.toString(), 45, engine.height - 53);
-
-        ctx.font = '8px PixelFont, monospace';
-        ctx.fillStyle = '#22c55e';
-        ctx.textAlign = 'left';
-        ctx.fillText('YOU', 80, engine.height - 60);
-
-        // Enemy HP
-        ctx.beginPath();
-        ctx.arc(45, 45, 30, 0, Math.PI * 2);
-        const eg = ctx.createRadialGradient(40, 40, 0, 45, 45, 30);
-        eg.addColorStop(0, '#ef4444');
-        eg.addColorStop(1, '#b91c1c');
-        ctx.fillStyle = eg;
-        ctx.fill();
-        ctx.strokeStyle = '#fca5a5';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.font = '18px PixelFont, monospace';
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.enemyHealth.toString(), 45, 47);
-
-        ctx.font = '8px PixelFont, monospace';
-        ctx.fillStyle = '#ef4444';
-        ctx.textAlign = 'left';
-        ctx.fillText('ENEMY', 80, 40);
-
-        // Enemy hand count
-        ctx.fillStyle = '#888';
-        ctx.fillText(`Hand: ${this.enemyHand.count}`, 80, 55);
-
-        // End Turn button and Attack buttons
-        if (this.isPlayerTurn) {
-            // Check if player has attackers selected
-            if (this.playerAttackers.length > 0) {
-                // Attack button
-                const atkX = engine.width - 180, atkY = engine.height - 55;
-                const atkW = 90, atkH = 35;
-                const atkHover = engine.mouse.x >= atkX - atkW/2 && engine.mouse.x <= atkX + atkW/2 &&
-                                 engine.mouse.y >= atkY - atkH/2 && engine.mouse.y <= atkY + atkH/2;
-
-                Draw.roundRect(ctx, atkX - atkW/2, atkY - atkH/2, atkW, atkH, 6);
-                ctx.fillStyle = atkHover ? '#ef4444' : '#dc2626';
-                ctx.fill();
-                ctx.strokeStyle = '#fca5a5';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.font = '9px PixelFont, monospace';
-                ctx.fillStyle = '#fff';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('ATTACK!', atkX, atkY);
-
-                if (engine.mouse.clicked && atkHover) {
-                    this.confirmPlayerAttack();
-                }
-
-                // Cancel button
-                const canX = engine.width - 70, canY = engine.height - 55;
-                const canW = 70, canH = 35;
-                const canHover = engine.mouse.x >= canX - canW/2 && engine.mouse.x <= canX + canW/2 &&
-                                 engine.mouse.y >= canY - canH/2 && engine.mouse.y <= canY + canH/2;
-
-                Draw.roundRect(ctx, canX - canW/2, canY - canH/2, canW, canH, 6);
-                ctx.fillStyle = canHover ? '#666' : '#444';
-                ctx.fill();
-                ctx.strokeStyle = '#888';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.font = '8px PixelFont, monospace';
-                ctx.fillStyle = '#fff';
-                ctx.fillText('CANCEL', canX, canY);
-
-                if (engine.mouse.clicked && canHover) {
-                    this.cancelPlayerAttack();
-                }
-
-                // Show attacker count
-                ctx.font = '8px PixelFont, monospace';
-                ctx.fillStyle = '#ef4444';
-                ctx.textAlign = 'center';
-                ctx.fillText(`${this.playerAttackers.length} attacker(s)`, engine.width - 125, engine.height - 80);
-            } else {
-                // Normal End Turn button
-                const bx = engine.width - 120, by = engine.height - 55;
-                const bw = 100, bh = 35;
-                const bh2 = bh / 2, bw2 = bw / 2;
-                const hover = engine.mouse.x >= bx - bw2 && engine.mouse.x <= bx + bw2 &&
-                              engine.mouse.y >= by - bh2 && engine.mouse.y <= by + bh2;
-
-                Draw.roundRect(ctx, bx - bw2, by - bh2, bw, bh, 6);
-                ctx.fillStyle = hover ? '#22c55e' : '#16a34a';
-                ctx.fill();
-                ctx.strokeStyle = '#86efac';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.font = '10px PixelFont, monospace';
-                ctx.fillStyle = '#fff';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('END TURN', bx, by);
-
-                if (engine.mouse.clicked && hover) {
-                    this.endPlayerTurn();
-                }
-            }
-        } else {
-            // Show "Enemy Turn" indicator
-            ctx.font = '12px PixelFont, monospace';
-            ctx.fillStyle = '#ef4444';
-            ctx.textAlign = 'center';
-            ctx.fillText('ENEMY TURN...', engine.width - 120, engine.height - 55);
+        // Gate action hint
+        if (!this.gateActionUsed) {
+            ctx.font = '8px PixelFont, monospace';
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('Click gate to upgrade, or press N for new gate', this.boardX + this.boardW / 2, engine.height - 18);
         }
 
-        // Blocking phase UI
-        if (this.combatPhase === 'declare_blockers') {
-            // Semi-transparent overlay
-            ctx.globalAlpha = 0.3;
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, engine.width, engine.height);
-            ctx.globalAlpha = 1;
+        // Add Gate button
+        const btnX = this.boardX + this.boardW - 80;
+        const btnY = this.isPlayer1Turn ? engine.height - 50 : 50;
+        const btnW = 70;
+        const btnH = 25;
+        const btnHover = engine.mouse.x >= btnX && engine.mouse.x <= btnX + btnW &&
+                        engine.mouse.y >= btnY && engine.mouse.y <= btnY + btnH;
 
-            // Title
-            ctx.font = '14px PixelFont, monospace';
-            ctx.fillStyle = '#ff6b6b';
-            ctx.textAlign = 'center';
-            ctx.fillText('DECLARE BLOCKERS', engine.width / 2, engine.height / 2 - 60);
-
-            ctx.font = '8px PixelFont, monospace';
-            ctx.fillStyle = '#aaa';
-            ctx.fillText('Click your creature, then click an attacker to block', engine.width / 2, engine.height / 2 - 40);
-
-            // Show attacker count
-            const blockedCount = this.blockerAssignments.size;
-            ctx.fillStyle = '#fff';
-            ctx.fillText(`Blocking ${blockedCount}/${this.attackingCreatures.length} attackers`, engine.width / 2, engine.height / 2 - 20);
-
-            // Confirm button
-            const bx = engine.width / 2, by = engine.height / 2 + 80;
-            const bw = 160, bh = 40;
-            const hover = engine.mouse.x >= bx - bw/2 && engine.mouse.x <= bx + bw/2 &&
-                          engine.mouse.y >= by - bh/2 && engine.mouse.y <= by + bh/2;
-
-            Draw.roundRect(ctx, bx - bw/2, by - bh/2, bw, bh, 8);
-            ctx.fillStyle = hover ? '#ef4444' : '#dc2626';
+        if (!this.gateActionUsed) {
+            Draw.roundRect(ctx, btnX, btnY, btnW, btnH, 4);
+            ctx.fillStyle = btnHover ? '#4ecdc4' : '#2a5a5a';
             ctx.fill();
-            ctx.strokeStyle = '#fca5a5';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 1;
             ctx.stroke();
 
-            ctx.font = '10px PixelFont, monospace';
+            ctx.font = '7px PixelFont, monospace';
             ctx.fillStyle = '#fff';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('CONFIRM BLOCKERS', bx, by);
+            ctx.textAlign = 'center';
+            ctx.fillText('+GATE', btnX + btnW / 2, btnY + btnH / 2 + 3);
+
+            if (engine.mouse.clicked && btnHover) {
+                this.addGate();
+            }
+        }
+
+        // End Turn button
+        const endX = this.boardX + 10;
+        const endY = this.isPlayer1Turn ? engine.height - 50 : 50;
+        const endW = 80;
+        const endH = 25;
+        const endHover = engine.mouse.x >= endX && engine.mouse.x <= endX + endW &&
+                        engine.mouse.y >= endY && engine.mouse.y <= endY + endH;
+
+        Draw.roundRect(ctx, endX, endY, endW, endH, 4);
+        ctx.fillStyle = endHover ? '#22c55e' : '#1a4a2e';
+        ctx.fill();
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.font = '8px PixelFont, monospace';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText('END TURN', endX + endW / 2, endY + endH / 2 + 3);
+
+        if (engine.mouse.clicked && endHover) {
+            this.endTurn();
         }
 
         // Message
         if (this.messageTimer > 0 && this.message) {
             ctx.globalAlpha = Math.min(1, this.messageTimer);
             ctx.font = '12px PixelFont, monospace';
-            ctx.fillStyle = this.gameOver ? (this.winner === 'player' ? '#22c55e' : '#ef4444') : '#ffeb3b';
+            ctx.fillStyle = '#fbbf24';
             ctx.textAlign = 'center';
             ctx.shadowColor = '#000';
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 2;
-            ctx.fillText(this.message, engine.width / 2, engine.height / 2 + 140);
-        }
-
-        // Game over
-        if (this.gameOver) {
-            ctx.globalAlpha = 0.85;
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, engine.width, engine.height);
+            ctx.shadowBlur = 4;
+            ctx.fillText(this.message, engine.width / 2, engine.height / 2);
+            ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
-
-            ctx.font = '32px PixelFont, monospace';
-            ctx.fillStyle = this.winner === 'player' ? '#22c55e' : '#ef4444';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.winner === 'player' ? 'VICTORY!' : 'DEFEAT!', engine.width / 2, engine.height / 2 - 20);
-
-            ctx.font = '12px PixelFont, monospace';
-            ctx.fillStyle = '#fff';
-            ctx.fillText('Refresh to play again', engine.width / 2, engine.height / 2 + 30);
         }
-
-        ctx.restore();
     }
 }
