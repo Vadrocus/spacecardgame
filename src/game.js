@@ -421,6 +421,7 @@ export class BattlefieldCard {
         this.toughness = data.stats?.defense || 1;
         this.currentToughness = this.toughness;
         this.damage = 0;
+        this.defenseBuffed = false; // Track if Defense Grid buff is active
 
         // State
         this.tapped = false;
@@ -819,11 +820,26 @@ export class BattlefieldCard {
             ctx.stroke();
 
             ctx.font = '16px PixelFont, monospace';
-            ctx.fillStyle = this.damage > 0 ? '#ef4444' : '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const toughnessDisplay = this.currentToughness - this.damage;
-            ctx.fillText(`${this.power}/${toughnessDisplay}`, ptX + ptW/2, ptY + ptH/2 + 1);
+
+            // Power text
+            const powerColor = '#fff';
+            const toughnessColor = this.damage > 0 ? '#ef4444' : (this.defenseBuffed ? '#22c55e' : '#fff');
+
+            // Draw power and toughness with separate colors
+            ctx.fillStyle = powerColor;
+            const powerText = `${this.power}/`;
+            const powerWidth = ctx.measureText(powerText).width;
+            const toughnessText = `${toughnessDisplay}`;
+            const totalWidth = ctx.measureText(`${this.power}/${toughnessDisplay}`).width;
+            const startX = ptX + ptW/2 - totalWidth/2;
+
+            ctx.textAlign = 'left';
+            ctx.fillText(powerText, startX, ptY + ptH/2 + 1);
+            ctx.fillStyle = toughnessColor;
+            ctx.fillText(toughnessText, startX + powerWidth, ptY + ptH/2 + 1);
         }
     }
 
@@ -3256,12 +3272,15 @@ export class Game {
                     ctx.fillText(`⚔ ${cardData.power}`, -cardW/2 + 60, statY);
                 }
 
-                // Defense
+                // Defense - show current toughness if this is a battlefield card with buffs
                 if (cardData.defense !== undefined) {
                     ctx.font = '32px PixelFont, monospace';
-                    ctx.fillStyle = '#3b82f6';
+                    const isBattlefieldCard = this.enlargedCard.toughness !== undefined;
+                    const defenseValue = isBattlefieldCard ? this.enlargedCard.toughness : cardData.defense;
+                    const isBuffed = isBattlefieldCard && this.enlargedCard.defenseBuffed;
+                    ctx.fillStyle = isBuffed ? '#22c55e' : '#3b82f6';
                     ctx.textAlign = 'right';
-                    ctx.fillText(`${cardData.defense} ⛊`, cardW/2 - 60, statY);
+                    ctx.fillText(`${defenseValue} ⛊`, cardW/2 - 60, statY);
                 }
             }
 
@@ -4646,8 +4665,10 @@ export class Game {
             if (p1HasGrid && isStructure) {
                 card.toughness = baseDefense + 1;
                 card.currentToughness = Math.max(card.currentToughness, card.toughness);
+                card.defenseBuffed = true;
             } else {
                 card.toughness = baseDefense;
+                card.defenseBuffed = false;
             }
         });
 
@@ -4660,8 +4681,10 @@ export class Game {
             if (p2HasGrid && isStructure) {
                 card.toughness = baseDefense + 1;
                 card.currentToughness = Math.max(card.currentToughness, card.toughness);
+                card.defenseBuffed = true;
             } else {
                 card.toughness = baseDefense;
+                card.defenseBuffed = false;
             }
         });
     }
