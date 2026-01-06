@@ -155,6 +155,18 @@ export class Graveyard {
 
         ctx.restore();
     }
+
+    containsPoint(px, py) {
+        const scale = 0.4;
+        const halfW = CARD_WIDTH * scale / 2;
+        const halfH = CARD_HEIGHT * scale / 2;
+        return px >= this.x - halfW && px <= this.x + halfW &&
+               py >= this.y - halfH && py <= this.y + halfH;
+    }
+
+    update(dt, engine) {
+        this.hovered = this.containsPoint(engine.mouse.x, engine.mouse.y);
+    }
 }
 
 // Gate class - can be incremented, acts as mana
@@ -1175,6 +1187,9 @@ export class Game {
         // Enlarged card view (click to inspect)
         this.enlargedCard = null;
 
+        // Graveyard view state
+        this.viewingGraveyard = null; // null or 'p1' or 'p2'
+
         // Drag-to-move state (battlefield cards)
         this.draggingCard = null;
         this.dragStartX = 0;
@@ -2102,6 +2117,8 @@ export class Game {
         // Update all objects
         this.p1Deck.update(dt, engine);
         this.p2Deck.update(dt, engine);
+        this.p1Graveyard.update(dt, engine);
+        this.p2Graveyard.update(dt, engine);
         this.p1Gates.forEach(g => g.update(dt, engine));
         this.p2Gates.forEach(g => g.update(dt, engine));
         this.p1Orbit.forEach(c => c.update(dt, engine));
@@ -2118,6 +2135,9 @@ export class Game {
         // Update event animations
         this.eventAnimations.forEach(e => e.update(dt));
         this.eventAnimations = this.eventAnimations.filter(e => !e.complete);
+
+        // Apply passive buffs (Defense Grid, etc.)
+        this.applyPassiveBuffs();
 
         // Track hovered battlefield card (for z-index priority) - includes planet units and generator
         this.hoveredBattlefieldCard = null;
@@ -2174,6 +2194,22 @@ export class Game {
             return; // Don't process other clicks
         }
 
+        // Click anywhere to close graveyard view
+        if (engine.mouse.clicked && this.viewingGraveyard) {
+            this.viewingGraveyard = null;
+            return; // Don't process other clicks
+        }
+
+        // Click graveyard to view cards
+        if (engine.mouse.clicked && this.p1Graveyard.hovered && this.p1Graveyard.count > 0) {
+            this.viewingGraveyard = 'p1';
+            return;
+        }
+        if (engine.mouse.clicked && this.p2Graveyard.hovered && this.p2Graveyard.count > 0) {
+            this.viewingGraveyard = 'p2';
+            return;
+        }
+
         // Handle hand card drag-to-play: Start drag
         if (engine.mouse.down && this.hoveredHandIndex >= 0 && !this.draggingHandCard && !this.enlargedCard) {
             const isP1 = this.isPlayer1Turn;
@@ -2204,14 +2240,19 @@ export class Game {
             const sidebarX = this.boardX + this.boardW;
             const inSidebar = this.handCardDragX > sidebarX;
 
-            // Check if dropped in orbit/battlefield zone
-            const orbitZoneY = isPlayer1 ? this.midY + 40 : this.midY - 40;
-            const inOrbitZone = Math.abs(this.handCardDragY - orbitZoneY) < 100 && !inSidebar;
+            // Check if dropped anywhere in the battlefield (generous drop zone)
+            // The battlefield is from boardY to boardY + boardH, and between boardX and boardX + boardW
+            const inBattlefield =
+                this.handCardDragX >= this.boardX &&
+                this.handCardDragX <= this.boardX + this.boardW &&
+                this.handCardDragY >= this.boardY &&
+                this.handCardDragY <= this.boardY + this.boardH &&
+                !inSidebar;
 
             if (inSidebar) {
                 // View mode - enlarge the card for inspection
                 this.enlargedCard = { data: card, isHandCard: true };
-            } else if (inOrbitZone) {
+            } else if (inBattlefield) {
                 // Check if any gate can afford the card
                 const gate = this.findAvailableGate(cost, isPlayer1);
                 if (gate) {
@@ -3260,6 +3301,102 @@ export class Game {
             ctx.textAlign = 'center';
             ctx.fillText('Click anywhere to close', engine.width / 2, engine.height - 30);
         }
+
+        // Graveyard view overlay
+        if (this.viewingGraveyard) {
+            const graveyard = this.viewingGraveyard === 'p1' ? this.p1Graveyard : this.p2Graveyard;
+            const cards = graveyard.cards;
+            const isP1 = this.viewingGraveyard === 'p1';
+
+            // Dim background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(0, 0, engine.width, engine.height);
+
+            // Title
+            ctx.font = '16px PixelFont, monospace';
+            ctx.fillStyle = isP1 ? '#4ecdc4' : '#a855f7';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${isP1 ? 'PLAYER 1' : 'PLAYER 2'} GRAVEYARD (${cards.length} cards)`, engine.width / 2, 40);
+
+            // Render cards in rows
+            const cardW = 100;
+            const cardH = 140;
+            const padding = 15;
+            const cardsPerRow = Math.floor((engine.width - 100) / (cardW + padding));
+            const startX = (engine.width - (Math.min(cards.length, cardsPerRow) * (cardW + padding) - padding)) / 2;
+            const startY = 80;
+
+            cards.forEach((card, i) => {
+                const row = Math.floor(i / cardsPerRow);
+                const col = i % cardsPerRow;
+                const x = startX + col * (cardW + padding);
+                const y = startY + row * (cardH + padding);
+
+                ctx.save();
+                ctx.translate(x + cardW / 2, y + cardH / 2);
+
+                // Card background
+                const typeColor = this._getTypeColor(card.type);
+                const gradient = ctx.createLinearGradient(-cardW/2, -cardH/2, cardW/2, cardH/2);
+                gradient.addColorStop(0, '#1a2a3a');
+                gradient.addColorStop(1, '#050508');
+
+                Draw.roundRect(ctx, -cardW/2, -cardH/2, cardW, cardH, 6);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = typeColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Type bar
+                ctx.fillStyle = typeColor;
+                ctx.fillRect(-cardW/2 + 4, -cardH/2 + 4, cardW - 8, 16);
+
+                // Cost orb
+                if (card.cost !== undefined) {
+                    const orbR = 10;
+                    const orbX = -cardW/2 + 12;
+                    const orbY = -cardH/2 + 12;
+                    ctx.beginPath();
+                    ctx.arc(orbX, orbY, orbR, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ca8a04';
+                    ctx.fill();
+                    ctx.font = '8px PixelFont, monospace';
+                    ctx.fillStyle = '#000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(card.cost.toString(), orbX, orbY);
+                }
+
+                // Card name
+                ctx.font = '7px PixelFont, monospace';
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                let name = card.name || 'UNKNOWN';
+                if (name.length > 14) name = name.substring(0, 12) + '..';
+                ctx.fillText(name, 0, -cardH/2 + 24);
+
+                // Stats
+                if (card.stats?.attack !== undefined) {
+                    ctx.font = '8px PixelFont, monospace';
+                    ctx.fillStyle = '#ef4444';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${card.stats.attack}`, -cardW/2 + 6, cardH/2 - 12);
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${card.stats.defense || 1}`, cardW/2 - 6, cardH/2 - 12);
+                }
+
+                ctx.restore();
+            });
+
+            // Instructions
+            ctx.font = '12px PixelFont, monospace';
+            ctx.fillStyle = '#888';
+            ctx.textAlign = 'center';
+            ctx.fillText('Click anywhere to close', engine.width / 2, engine.height - 30);
+        }
     }
 
     _renderHand(ctx, engine, hand, isPlayer1) {
@@ -4139,9 +4276,21 @@ export class Game {
         );
 
         // Defender deals damage to attackers (lowest power first)
+        // BUT only if defender can reach them (ground can't counter-attack orbital without anti-air)
         let defenderPower = this.getEffectiveAttack(defender);
+
+        const defenderOnGround = this.p1Planet.includes(defender) || this.p2Planet.includes(defender);
+
         for (const attacker of sortedAttackers) {
             if (defenderPower <= 0) break;
+
+            // Check if defender can counter-attack this attacker
+            const attackerInOrbit = this.p1Orbit.includes(attacker) || this.p2Orbit.includes(attacker);
+
+            // Ground defenders can't counter-attack orbital attackers unless they have anti-air
+            if (defenderOnGround && attackerInOrbit && !this.hasAntiAir(defender)) {
+                continue; // Skip this attacker - defender can't reach them
+            }
 
             const attackerHP = attacker.currentToughness - attacker.damage;
             const damageToAttacker = Math.min(defenderPower, attackerHP);
@@ -4472,6 +4621,49 @@ export class Game {
 
         // Must have attack power
         return card.power > 0;
+    }
+
+    // Check if Defense Grid is on the battlefield for a player
+    hasDefenseGrid(isPlayer1) {
+        const orbit = isPlayer1 ? this.p1Orbit : this.p2Orbit;
+        return orbit.some(card =>
+            card.data?.name?.toLowerCase().includes('defense grid')
+        );
+    }
+
+    // Apply passive bonuses like Defense Grid to all structures
+    applyPassiveBuffs() {
+        // Check for Defense Grid and apply +1 defense to all structures
+        const p1HasGrid = this.hasDefenseGrid(true);
+        const p2HasGrid = this.hasDefenseGrid(false);
+
+        // Apply to P1 cards
+        [...this.p1Orbit, ...this.p1Planet].forEach(card => {
+            const type = (card.data?.type || '').toLowerCase();
+            const isStructure = type.includes('structure') || type.includes('station');
+            const baseDefense = card.data?.stats?.defense || 1;
+
+            if (p1HasGrid && isStructure) {
+                card.toughness = baseDefense + 1;
+                card.currentToughness = Math.max(card.currentToughness, card.toughness);
+            } else {
+                card.toughness = baseDefense;
+            }
+        });
+
+        // Apply to P2 cards
+        [...this.p2Orbit, ...this.p2Planet].forEach(card => {
+            const type = (card.data?.type || '').toLowerCase();
+            const isStructure = type.includes('structure') || type.includes('station');
+            const baseDefense = card.data?.stats?.defense || 1;
+
+            if (p2HasGrid && isStructure) {
+                card.toughness = baseDefense + 1;
+                card.currentToughness = Math.max(card.currentToughness, card.toughness);
+            } else {
+                card.toughness = baseDefense;
+            }
+        });
     }
 
     // Get type color for rendering (used by enlarged card view)
