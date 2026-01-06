@@ -2200,11 +2200,18 @@ export class Game {
             const cardIndex = this.draggingHandCardIndex;
             const cost = card.cost || 0;
 
+            // Check if dropped in sidebar area (right side) - enter view mode
+            const sidebarX = this.boardX + this.boardW;
+            const inSidebar = this.handCardDragX > sidebarX;
+
             // Check if dropped in orbit/battlefield zone
             const orbitZoneY = isPlayer1 ? this.midY + 40 : this.midY - 40;
-            const inOrbitZone = Math.abs(this.handCardDragY - orbitZoneY) < 100;
+            const inOrbitZone = Math.abs(this.handCardDragY - orbitZoneY) < 100 && !inSidebar;
 
-            if (inOrbitZone) {
+            if (inSidebar) {
+                // View mode - enlarge the card for inspection
+                this.enlargedCard = { data: card, isHandCard: true };
+            } else if (inOrbitZone) {
                 // Check if any gate can afford the card
                 const gate = this.findAvailableGate(cost, isPlayer1);
                 if (gate) {
@@ -2660,6 +2667,30 @@ export class Game {
         this.p2Deck.render(ctx);
         this.p1Graveyard.render(ctx);
         this.p2Graveyard.render(ctx);
+
+        // Show "DROP TO VIEW" hint when dragging hand card toward sidebar
+        if (this.draggingHandCard) {
+            const sidebarX = this.boardX + this.boardW;
+            const inSidebar = this.handCardDragX > sidebarX;
+
+            ctx.save();
+            ctx.globalAlpha = inSidebar ? 1 : 0.5;
+            ctx.fillStyle = inSidebar ? '#22c55e' : '#666';
+            ctx.font = '12px PixelFont, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('DROP TO', sidebarX + 60, engine.height / 2 - 10);
+            ctx.fillText('VIEW CARD', sidebarX + 60, engine.height / 2 + 10);
+
+            // Draw highlight box when hovering over sidebar
+            if (inSidebar) {
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(sidebarX + 5, 50, 110, engine.height - 100);
+                ctx.setLineDash([]);
+            }
+            ctx.restore();
+        }
 
         // Render display cards
         this.planetCard.render(ctx);
