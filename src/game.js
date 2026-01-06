@@ -3100,7 +3100,7 @@ export class Game {
             ctx.fillRect(0, 0, engine.width, engine.height);
 
             const cardData = this.enlargedCard.data || this.enlargedCard;
-            const scale = 4; // 400% scale
+            const scale = 3; // 300% scale
             const cardW = CARD_WIDTH * scale;
             const cardH = CARD_HEIGHT * scale;
             const centerX = engine.width / 2;
@@ -3109,12 +3109,7 @@ export class Game {
             ctx.save();
             ctx.translate(centerX, centerY);
 
-            // Card shadow
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 40;
-            ctx.shadowOffsetY = 20;
-
-            // Card background gradient
+            // Card background gradient (no shadow effects)
             const typeColor = this._getTypeColor(cardData.type);
             const gradient = ctx.createLinearGradient(-cardW/2, -cardH/2, cardW/2, cardH/2);
             gradient.addColorStop(0, '#1a2a3a');
@@ -3122,8 +3117,6 @@ export class Game {
             Draw.roundRect(ctx, -cardW/2, -cardH/2, cardW, cardH, 20);
             ctx.fillStyle = gradient;
             ctx.fill();
-
-            ctx.shadowBlur = 0;
 
             // Border
             ctx.strokeStyle = typeColor;
