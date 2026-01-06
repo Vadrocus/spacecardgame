@@ -30,10 +30,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         // Render game UI
         game.renderUI(engine.ctx, engine);
 
-        // Title
+        // Title - top center
         Draw.pixelText(
             engine.ctx,
-            'SPACE CONQUEST',
+            'SPACE CARD GAME',
             engine.width / 2,
             10,
             14,

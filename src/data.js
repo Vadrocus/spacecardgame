@@ -2,22 +2,38 @@
  * Space Card Game - Card Database
  */
 
-// Generate blank player cards (40 per deck)
-function generateBlankDeck() {
-    const cards = [];
-    for (let i = 0; i < 40; i++) {
-        cards.push({
-            id: i,
-            name: `CARD ${i + 1}`,
-            type: 'ship',
-            cost: Math.floor(i / 10) + 1, // Cost 1-4 based on position
-            attack: 0,
-            defense: 1,
-            effect: 'Blank card.',
-            flavor: ''
-        });
-    }
-    return cards;
+// Deck cache
+let terranDeckCache = null;
+let crystalDeckCache = null;
+
+// Load Terran deck from JSON
+export async function loadTerranDeck() {
+    if (terranDeckCache) return terranDeckCache;
+    const response = await fetch('src/decks/terran-deck.json');
+    terranDeckCache = await response.json();
+    return terranDeckCache;
+}
+
+// Load Crystal deck from JSON
+export async function loadCrystalDeck() {
+    if (crystalDeckCache) return crystalDeckCache;
+    const response = await fetch('src/decks/crystal-deck.json');
+    crystalDeckCache = await response.json();
+    return crystalDeckCache;
+}
+
+// Load both decks
+export async function loadAllDecks() {
+    const [terran, crystal] = await Promise.all([
+        loadTerranDeck(),
+        loadCrystalDeck()
+    ]);
+    return { terran, crystal };
+}
+
+// Get cards array from a deck (for gameplay)
+export function getDeckCards(deck) {
+    return deck.cards.map(card => ({ ...card }));
 }
 
 // Planet deck - drawn at game start
@@ -53,8 +69,8 @@ export const nativesDeck = [
     { name: 'ANCIENT ONES', type: 'natives', effect: 'Elder race.', hostility: 3, color: '#fbbf24' },
 ];
 
-// Player card database (blank for now)
-export const cardDatabase = generateBlankDeck();
+// Legacy cardDatabase - use loadTerranDeck() or loadCrystalDeck() for faction decks
+export const cardDatabase = [];
 
 // Shuffle utility
 export function shuffle(array) {
