@@ -2461,6 +2461,18 @@ export class Game {
                     }
                 }
             }
+
+            // DEBUG: Click deck to draw a card
+            if (this.p1Deck.hovered && this.isPlayer1Turn) {
+                this.drawCardForPlayer(true);
+                this.showMessage('DEBUG: Drew a card');
+                return;
+            }
+            if (this.p2Deck.hovered && !this.isPlayer1Turn) {
+                this.drawCardForPlayer(false);
+                this.showMessage('DEBUG: Drew a card');
+                return;
+            }
         }
     }
 
