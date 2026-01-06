@@ -1189,6 +1189,8 @@ export class Game {
 
         // Hand hover state (for pop-out effect)
         this.hoveredHandIndex = -1;
+        this.lastHoveredHandIndex = -1;
+        this.lastHoveredTime = 0;
 
         // Display cards
         this.planetCard = new DisplayCard(0, 0, this.planet, 'PLANET');
@@ -2037,24 +2039,24 @@ export class Game {
     _layoutGates() {
         const zoneH = this.boardH / 2 / 3;
 
-        // Layout P1 gates (bottom zone, centered across full width)
-        const p1GateY = this.boardY + this.boardH - zoneH / 2;
+        // Layout P1 gates (left side, stacked vertically in bottom half)
+        const p1GateX = this.boardX + 50;
         const p1Count = this.p1Gates.length;
-        const p1Spacing = Math.min(80, (this.boardW - 100) / Math.max(p1Count, 1));
-        const p1StartX = this.boardX + this.boardW / 2 - (p1Count - 1) * p1Spacing / 2;
+        const p1Spacing = Math.min(50, 120 / Math.max(p1Count, 1));
+        const p1StartY = this.midY + 60;
         this.p1Gates.forEach((gate, i) => {
-            gate.targetX = p1StartX + i * p1Spacing;
-            gate.targetY = p1GateY;
+            gate.targetX = p1GateX;
+            gate.targetY = p1StartY + i * p1Spacing;
         });
 
-        // Layout P2 gates (top zone, centered across full width)
-        const p2GateY = this.boardY + zoneH / 2;
+        // Layout P2 gates (left side, stacked vertically in top half)
+        const p2GateX = this.boardX + 50;
         const p2Count = this.p2Gates.length;
-        const p2Spacing = Math.min(80, (this.boardW - 100) / Math.max(p2Count, 1));
-        const p2StartX = this.boardX + this.boardW / 2 - (p2Count - 1) * p2Spacing / 2;
+        const p2Spacing = Math.min(50, 120 / Math.max(p2Count, 1));
+        const p2StartY = this.midY - 60 - (p2Count - 1) * p2Spacing;
         this.p2Gates.forEach((gate, i) => {
-            gate.targetX = p2StartX + i * p2Spacing;
-            gate.targetY = p2GateY;
+            gate.targetX = p2GateX;
+            gate.targetY = p2StartY + i * p2Spacing;
         });
     }
 
@@ -2195,6 +2197,7 @@ export class Game {
         if (this.draggingHandCard && !engine.mouse.down) {
             const card = this.draggingHandCard;
             const isPlayer1 = this.draggingHandCardIsPlayer1;
+            const cardIndex = this.draggingHandCardIndex;
             const cost = card.cost || 0;
 
             // Check if dropped in orbit/battlefield zone
@@ -2202,10 +2205,11 @@ export class Game {
             const inOrbitZone = Math.abs(this.handCardDragY - orbitZoneY) < 100;
 
             if (inOrbitZone) {
-                // Try to play the card
+                // Check if any gate can afford the card
                 const gate = this.findAvailableGate(cost, isPlayer1);
                 if (gate) {
-                    this.playCard(this.draggingHandCardIndex, isPlayer1, gate);
+                    // Enter gate selection mode - let player choose which gate
+                    this.startGateSelection(cardIndex, isPlayer1);
                 } else {
                     this.showMessage('No gate with enough power!');
                 }
@@ -2216,12 +2220,25 @@ export class Game {
         }
 
         // Double-click on hand card to enlarge (for inspection)
-        if (engine.mouse.doubleClicked && this.hoveredHandIndex >= 0 && !this.enlargedCard) {
-            const isP1 = this.isPlayer1Turn;
-            const hand = isP1 ? this.p1Hand : this.p2Hand;
-            if (this.hoveredHandIndex < hand.length) {
-                this.enlargedCard = { data: hand[this.hoveredHandIndex], isHandCard: true };
+        // Use lastHoveredHandIndex to handle slight mouse movement during double-click
+        if (engine.mouse.doubleClicked && !this.enlargedCard && !this.draggingHandCard) {
+            const idx = this.hoveredHandIndex >= 0 ? this.hoveredHandIndex : this.lastHoveredHandIndex;
+            if (idx >= 0) {
+                const isP1 = this.isPlayer1Turn;
+                const hand = isP1 ? this.p1Hand : this.p2Hand;
+                if (idx < hand.length) {
+                    this.enlargedCard = { data: hand[idx], isHandCard: true };
+                }
             }
+        }
+
+        // Track last hovered index for double-click reliability
+        if (this.hoveredHandIndex >= 0) {
+            this.lastHoveredHandIndex = this.hoveredHandIndex;
+            this.lastHoveredTime = performance.now();
+        } else if (performance.now() - this.lastHoveredTime > 500) {
+            // Clear after 500ms of not hovering
+            this.lastHoveredHandIndex = -1;
         }
 
         // Double-click on battlefield card to enlarge
@@ -2468,16 +2485,20 @@ export class Game {
                 const cardX = centerX + Math.sin(angle) * arcRadius;
                 const cardY = baseY - Math.cos(angle) * 80;
 
-                // Simple rectangular hit test (approximate)
-                const hitW = cardW * 0.8;
-                const hitH = cardH * 0.9;
+                // Hit test - account for pop-out position (card moves up 60px when hovered)
+                const isCurrentlyHovered = this.hoveredHandIndex === i;
+                const popOut = isCurrentlyHovered ? 60 : 0;
+                const hitW = cardW;
+                const hitH = cardH + popOut; // Extend hit area to include pop-out region
+                const hitY = cardY - popOut; // Shift hit center up when popped out
+
                 if (mx >= cardX - hitW/2 && mx <= cardX + hitW/2 &&
-                    my >= cardY - hitH/2 && my <= cardY + hitH/2) {
+                    my >= hitY - hitH/2 && my <= hitY + hitH/2) {
                     this.hoveredHandIndex = i;
                     this.hoveredCard = this.p1Hand[i];
                     this.hoveredCardPos = {
                         x: cardX,
-                        y: cardY - cardH/2 - 20,
+                        y: cardY - popOut - cardH/2 - 20,
                         isPlayer1: true
                     };
                     return;
@@ -2497,15 +2518,20 @@ export class Game {
                 const cardX = centerX + Math.sin(angle) * arcRadius;
                 const cardY = baseY + Math.cos(angle) * 80;
 
-                const hitW = cardW * 0.8;
-                const hitH = cardH * 0.9;
+                // Hit test - account for pop-out position (card moves down 60px when hovered for P2)
+                const isCurrentlyHovered = this.hoveredHandIndex === i;
+                const popOut = isCurrentlyHovered ? 60 : 0;
+                const hitW = cardW;
+                const hitH = cardH + popOut;
+                const hitY = cardY + popOut;
+
                 if (mx >= cardX - hitW/2 && mx <= cardX + hitW/2 &&
-                    my >= cardY - hitH/2 && my <= cardY + hitH/2) {
+                    my >= hitY - hitH/2 && my <= hitY + hitH/2) {
                     this.hoveredHandIndex = i;
                     this.hoveredCard = this.p2Hand[i];
                     this.hoveredCardPos = {
                         x: cardX,
-                        y: cardY + cardH/2 + 20,
+                        y: cardY + popOut + cardH/2 + 20,
                         isPlayer1: false
                     };
                     return;
