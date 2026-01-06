@@ -3100,7 +3100,7 @@ export class Game {
             ctx.fillRect(0, 0, engine.width, engine.height);
 
             const cardData = this.enlargedCard.data || this.enlargedCard;
-            const scale = 8; // 800% scale
+            const scale = 4; // 400% scale
             const cardW = CARD_WIDTH * scale;
             const cardH = CARD_HEIGHT * scale;
             const centerX = engine.width / 2;
