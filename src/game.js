@@ -2397,8 +2397,21 @@ export class Game {
                         return;
                     }
 
-                    // Check for Survey Team artifact discovery FIRST (non-combatant)
-                    if (this.isSurveyTeam(card) && !card.tapped && !card.summoningSickness) {
+                    // Ground units in orbit are "bricks" - they can only be dragged to surface
+                    const inOrbit = this.p1Orbit.includes(card) || this.p2Orbit.includes(card);
+                    const onPlanet = this.p1Planet.includes(card) || this.p2Planet.includes(card);
+
+                    if (this.isGroundUnit(card) && inOrbit) {
+                        if (!card.summoningSickness && !card.tapped && !card.movedThisTurn) {
+                            this.showMessage('Drag to planet surface to deploy!');
+                        } else if (card.summoningSickness) {
+                            this.showMessage('Wait a turn, then drag to surface');
+                        }
+                        return;
+                    }
+
+                    // Check for Survey Team artifact discovery (must be on planet surface)
+                    if (this.isSurveyTeam(card) && onPlanet && !card.tapped && !card.summoningSickness) {
                         this.attemptArtifactDiscovery(card, card.isPlayer1);
                         return;
                     }
