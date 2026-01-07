@@ -1737,31 +1737,36 @@ export class Game {
 
         // Check if this is an event card
         if (this.isEventCard(card)) {
-            // Event cards: animate, trigger effect, go to graveyard
-            const centerX = this.boardX + this.boardW / 2;
-            const centerY = this.midY;
-            const graveyardX = isPlayer1 ? this.p1Graveyard.x : this.p2Graveyard.x;
-            const graveyardY = isPlayer1 ? this.p1Graveyard.y : this.p2Graveyard.y;
+            // First check if this event needs targeting (returns false if so)
+            const effectComplete = this._triggerEventEffect(card, isPlayer1);
 
-            const eventAnim = new EventAnimation(
-                card,
-                gate.x, gate.y,  // Start at gate
-                graveyardX, graveyardY,  // End at graveyard
-                isPlayer1,
-                () => {
-                    // On complete, add to graveyard
-                    graveyard.add(card);
-                    this.showMessage(`${card.name} resolved!`);
-                }
-            );
+            if (effectComplete) {
+                // Event resolves immediately - animate and go to graveyard
+                const centerX = this.boardX + this.boardW / 2;
+                const centerY = this.midY;
+                const graveyardX = isPlayer1 ? this.p1Graveyard.x : this.p2Graveyard.x;
+                const graveyardY = isPlayer1 ? this.p1Graveyard.y : this.p2Graveyard.y;
 
-            // Set center position for display phase
-            eventAnim.setCenter(centerX, centerY);
+                const eventAnim = new EventAnimation(
+                    card,
+                    gate.x, gate.y,  // Start at gate
+                    graveyardX, graveyardY,  // End at graveyard
+                    isPlayer1,
+                    () => {
+                        // On complete, add to graveyard
+                        graveyard.add(card);
+                        this.showMessage(`${card.name} resolved!`);
+                    }
+                );
 
-            this.eventAnimations.push(eventAnim);
+                // Set center position for display phase
+                eventAnim.setCenter(centerX, centerY);
 
-            this.showMessage(`${card.name} triggered!`);
-            this._triggerEventEffect(card, isPlayer1);
+                this.eventAnimations.push(eventAnim);
+                this.showMessage(`${card.name} triggered!`);
+            }
+            // If effectComplete is false, the card is in targeting mode (this.eventCard)
+            // and will be handled by the targeting system
         } else if (this.isEquipment(card)) {
             // Equipment cards: enter targeting mode
             this.equipmentCard = card;
@@ -2227,26 +2232,9 @@ export class Game {
         }
 
         // Handle event card targeting (Orbital Bombardment, etc.)
-        if (this.eventCard && engine.mouse.clicked) {
-            // Check if clicking on a valid target (enemy ground unit)
-            const enemyPlanet = this.eventIsPlayer1 ? this.p2Planet : this.p1Planet;
-            const target = enemyPlanet.find(card => card.hovered);
-
-            if (target) {
-                // Execute the orbital strike on target
-                this.executeOrbitalStrikeEvent(target);
-
-                // Send event card to graveyard
-                const graveyard = this.eventIsPlayer1 ? this.p1Graveyard : this.p2Graveyard;
-                graveyard.addCard(this.eventCard);
-
-                // Clear event targeting mode
-                this.eventCard = null;
-                this.eventIsPlayer1 = true;
-                return;
-            } else if (engine.mouse.rightClicked || !this.hoveredBattlefieldCard) {
-                // Right-click or click on empty space to cancel
-                // Return the card to hand
+        if (this.eventCard) {
+            // Cancel with right-click
+            if (engine.mouse.rightClicked) {
                 const hand = this.eventIsPlayer1 ? this.p1Hand : this.p2Hand;
                 hand.push(this.eventCard);
                 this.eventCard = null;
@@ -2254,16 +2242,27 @@ export class Game {
                 this.showMessage('Targeting cancelled');
                 return;
             }
-        }
 
-        // Cancel event targeting with right-click
-        if (this.eventCard && engine.mouse.rightClicked) {
-            const hand = this.eventIsPlayer1 ? this.p1Hand : this.p2Hand;
-            hand.push(this.eventCard);
-            this.eventCard = null;
-            this.eventIsPlayer1 = true;
-            this.showMessage('Targeting cancelled');
-            return;
+            if (engine.mouse.clicked) {
+                // Check if clicking on a valid target (enemy ground unit)
+                const enemyPlanet = this.eventIsPlayer1 ? this.p2Planet : this.p1Planet;
+                const target = enemyPlanet.find(card => card.hovered);
+
+                if (target) {
+                    // Execute the orbital strike on target
+                    this.executeOrbitalStrikeEvent(target);
+
+                    // Send event card to graveyard
+                    const graveyard = this.eventIsPlayer1 ? this.p1Graveyard : this.p2Graveyard;
+                    graveyard.add(this.eventCard);
+
+                    // Clear event targeting mode
+                    this.eventCard = null;
+                    this.eventIsPlayer1 = true;
+                }
+                // Always consume click when in targeting mode
+                return;
+            }
         }
 
         // Handle hand card drag-to-play: Start drag

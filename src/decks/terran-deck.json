@@ -372,11 +372,11 @@
     },
     {
       "id": 29,
-      "name": "Orbital Strike",
+      "name": "Orbital Bombardment",
       "type": "event",
-      "cost": 0,
-      "requirement": "Requires Capital Ship",
-      "effect": "Capital ship can attack surface unit directly with -1 penalty",
+      "cost": 3,
+      "ability": "Deal 3 damage to target ground unit",
+      "effect": "Deal 3 damage to target ground unit",
       "flavor": "Precision from the heavens. The enemy never sees it coming. —Gunnery Chief Barnes",
       "art": {
         "style": "Dramatic action scene like Simon Stålenhag",
