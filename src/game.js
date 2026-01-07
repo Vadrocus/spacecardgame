@@ -1446,17 +1446,63 @@ export class Game {
             }
         }
 
-        // Attack with ground units after a delay
+        // Move ground units from orbit to planet surface
+        for (let i = this.p2Orbit.length - 1; i >= 0; i--) {
+            const card = this.p2Orbit[i];
+            if (this.isGroundUnit(card) && !card.summoningSickness && !card.tapped && !card.movedThisTurn) {
+                this.moveToPlanet(card);
+            }
+        }
+
+        // Survey with Survey Teams after a delay
+        setTimeout(() => this._aiSurvey(), 500);
+    }
+
+    _aiSurvey() {
+        // Use Survey Teams to survey
+        for (const card of this.p2Planet) {
+            if (this.isSurveyTeam(card) && !card.tapped && !card.summoningSickness) {
+                this.attemptArtifactDiscovery(card, false);
+            }
+        }
+
+        // Attack after a delay
         setTimeout(() => this._aiAttack(), 500);
     }
 
     _aiAttack() {
-        // Attack with any ready OFFENSIVE ground units only
-        const myGroundUnits = this.p2Planet.filter(u =>
+        // Get ready offensive ground units
+        let myGroundUnits = this.p2Planet.filter(u =>
             !u.tapped && !u.summoningSickness && u.power > 0 && this.isOffensiveUnit(u)
         );
-        // Get attackable enemy ground units (excluding artifacts)
-        const enemyGroundUnits = this.p1Planet.filter(u => !this.isArtifact(u));
+
+        // Check if AI can seize the Planetary Generator
+        if (this.planetaryGenerator && this.planetaryGenerator.isPlayer1) {
+            const generatorHP = this.planetaryGenerator.currentToughness - this.planetaryGenerator.damage;
+            const totalAIPower = myGroundUnits.reduce((sum, u) => sum + u.power, 0);
+
+            if (totalAIPower >= generatorHP) {
+                // AI has enough power to seize the generator - attack it!
+                this.showMessage('AI forces assault the Planetary Generator!');
+
+                for (const attacker of myGroundUnits) {
+                    if (this.planetaryGenerator.isPlayer1) { // Check still enemy-owned
+                        this.performCombatWithAbilities(attacker, this.planetaryGenerator);
+                        attacker.tap();
+                    }
+                }
+
+                // Refresh ground units list after attacking generator
+                myGroundUnits = this.p2Planet.filter(u =>
+                    !u.tapped && !u.summoningSickness && u.power > 0 && this.isOffensiveUnit(u)
+                );
+            }
+        }
+
+        // Get attackable enemy ground units (excluding artifacts and generator)
+        const enemyGroundUnits = this.p1Planet.filter(u =>
+            !this.isArtifact(u) && u !== this.planetaryGenerator
+        );
 
         for (const attacker of myGroundUnits) {
             if (enemyGroundUnits.length > 0) {
