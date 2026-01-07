@@ -451,7 +451,8 @@
       "type": "event",
       "cost": 3,
       "costAlternate": "0 if played from orbital structure",
-      "effect": "Deal damage to all enemy surface units and structures in target sector",
+      "ability": "Deal 3 damage to target ground unit",
+      "effect": "Deal 3 damage to target ground unit",
       "flavor": "Orbital superiority means we choose when and where to apply overwhelming force. —Fleet Coordinator Saito",
       "art": {
         "style": "Epic scale destruction like Karel Thole",

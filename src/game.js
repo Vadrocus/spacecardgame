@@ -2226,6 +2226,46 @@ export class Game {
             return;
         }
 
+        // Handle event card targeting (Orbital Bombardment, etc.)
+        if (this.eventCard && engine.mouse.clicked) {
+            // Check if clicking on a valid target (enemy ground unit)
+            const enemyPlanet = this.eventIsPlayer1 ? this.p2Planet : this.p1Planet;
+            const target = enemyPlanet.find(card => card.hovered);
+
+            if (target) {
+                // Execute the orbital strike on target
+                this.executeOrbitalStrikeEvent(target);
+
+                // Send event card to graveyard
+                const graveyard = this.eventIsPlayer1 ? this.p1Graveyard : this.p2Graveyard;
+                graveyard.addCard(this.eventCard);
+
+                // Clear event targeting mode
+                this.eventCard = null;
+                this.eventIsPlayer1 = true;
+                return;
+            } else if (engine.mouse.rightClicked || !this.hoveredBattlefieldCard) {
+                // Right-click or click on empty space to cancel
+                // Return the card to hand
+                const hand = this.eventIsPlayer1 ? this.p1Hand : this.p2Hand;
+                hand.push(this.eventCard);
+                this.eventCard = null;
+                this.eventIsPlayer1 = true;
+                this.showMessage('Targeting cancelled');
+                return;
+            }
+        }
+
+        // Cancel event targeting with right-click
+        if (this.eventCard && engine.mouse.rightClicked) {
+            const hand = this.eventIsPlayer1 ? this.p1Hand : this.p2Hand;
+            hand.push(this.eventCard);
+            this.eventCard = null;
+            this.eventIsPlayer1 = true;
+            this.showMessage('Targeting cancelled');
+            return;
+        }
+
         // Handle hand card drag-to-play: Start drag
         if (engine.mouse.down && this.hoveredHandIndex >= 0 && !this.draggingHandCard && !this.enlargedCard) {
             const isP1 = this.isPlayer1Turn;
@@ -3041,50 +3081,52 @@ export class Game {
             ctx.fillText('Click gate to upgrade', this.boardX + this.boardW / 2, hintY);
         }
 
-        // End Turn button (stylized)
-        const endX = this.boardX + 70;
-        const endY = this.isPlayer1Turn ? engine.height - 55 : 50;
-        const endW = 85;
-        const endH = 28;
-        const endHover = engine.mouse.x >= endX && engine.mouse.x <= endX + endW &&
-                        engine.mouse.y >= endY && engine.mouse.y <= endY + endH;
+        // End Turn button (stylized) - only show for player 1's turn
+        if (this.isPlayer1Turn) {
+            const endX = this.boardX + 70;
+            const endY = engine.height - 55;
+            const endW = 85;
+            const endH = 28;
+            const endHover = engine.mouse.x >= endX && engine.mouse.x <= endX + endW &&
+                            engine.mouse.y >= endY && engine.mouse.y <= endY + endH;
 
-        ctx.save();
-        if (endHover) {
-            ctx.shadowColor = '#22c55e';
-            ctx.shadowBlur = 10;
-        }
+            ctx.save();
+            if (endHover) {
+                ctx.shadowColor = '#22c55e';
+                ctx.shadowBlur = 10;
+            }
 
-        const endGrad = ctx.createLinearGradient(endX, endY, endX, endY + endH);
-        endGrad.addColorStop(0, endHover ? '#2a6a3e' : '#1a4a2e');
-        endGrad.addColorStop(1, endHover ? '#1a4a2e' : '#0a2a1a');
+            const endGrad = ctx.createLinearGradient(endX, endY, endX, endY + endH);
+            endGrad.addColorStop(0, endHover ? '#2a6a3e' : '#1a4a2e');
+            endGrad.addColorStop(1, endHover ? '#1a4a2e' : '#0a2a1a');
 
-        Draw.roundRect(ctx, endX, endY, endW, endH, 6);
-        ctx.fillStyle = endGrad;
-        ctx.fill();
+            Draw.roundRect(ctx, endX, endY, endW, endH, 6);
+            ctx.fillStyle = endGrad;
+            ctx.fill();
 
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = endHover ? 2 : 1;
-        ctx.stroke();
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = endHover ? 2 : 1;
+            ctx.stroke();
 
-        // Inner highlight
-        ctx.strokeStyle = 'rgba(74, 222, 128, 0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(endX + 10, endY + 3);
-        ctx.lineTo(endX + endW - 10, endY + 3);
-        ctx.stroke();
+            // Inner highlight
+            ctx.strokeStyle = 'rgba(74, 222, 128, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(endX + 10, endY + 3);
+            ctx.lineTo(endX + endW - 10, endY + 3);
+            ctx.stroke();
 
-        ctx.font = '9px PixelFont, monospace';
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('END TURN', endX + endW / 2, endY + endH / 2);
+            ctx.font = '9px PixelFont, monospace';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('END TURN', endX + endW / 2, endY + endH / 2);
 
-        ctx.restore();
+            ctx.restore();
 
-        if (engine.mouse.clicked && endHover) {
-            this.endTurn();
+            if (engine.mouse.clicked && endHover) {
+                this.endTurn();
+            }
         }
 
         // Render hands
@@ -3160,6 +3202,94 @@ export class Game {
 
             ctx.fillStyle = '#888';
             ctx.fillText('Click enemy to attack | Right-click generator to garrison | Right-click to cancel', engine.width / 2, msgY + 56);
+        }
+
+        // Event card targeting mode UI (Orbital Bombardment, etc.)
+        if (this.eventCard) {
+            // Highlight valid targets (enemy ground units)
+            const enemyPlanet = this.eventIsPlayer1 ? this.p2Planet : this.p1Planet;
+            for (const card of enemyPlanet) {
+                const highlightColor = card.hovered ? '#ef4444' : '#ff6b6b';
+                ctx.save();
+                ctx.strokeStyle = highlightColor;
+                ctx.lineWidth = card.hovered ? 4 : 2;
+                ctx.shadowColor = highlightColor;
+                ctx.shadowBlur = card.hovered ? 15 : 8;
+                ctx.beginPath();
+                const scale = card.baseScale * (card.hovered ? 1.15 : 1);
+                const w = CARD_WIDTH * scale;
+                const h = CARD_HEIGHT * scale;
+                ctx.rect(card.x - w/2, card.y - h/2, w, h);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Show the event card on the left side
+            const cardScale = 1.5;
+            const cardW = CARD_WIDTH * cardScale;
+            const cardH = CARD_HEIGHT * cardScale;
+            const cardX = 80;
+            const cardY = engine.height / 2;
+
+            ctx.save();
+            ctx.translate(cardX, cardY);
+
+            // Card background
+            const typeColor = this._getTypeColor(this.eventCard.type);
+            const gradient = ctx.createLinearGradient(-cardW/2, -cardH/2, cardW/2, cardH/2);
+            gradient.addColorStop(0, '#1a2a3a');
+            gradient.addColorStop(1, '#050508');
+
+            Draw.roundRect(ctx, -cardW/2, -cardH/2, cardW, cardH, 10);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = typeColor;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Glow effect
+            ctx.shadowColor = typeColor;
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Card name
+            ctx.font = '14px PixelFont, monospace';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.eventCard.name || 'Event', 0, -cardH/2 + 30);
+
+            // Ability text
+            const ability = this.eventCard.ability || this.eventCard.effect || '';
+            ctx.font = '10px PixelFont, monospace';
+            ctx.fillStyle = '#ccc';
+            const words = ability.split(' ');
+            let lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                const testLine = currentLine ? currentLine + ' ' + word : word;
+                if (ctx.measureText(testLine).width > cardW - 20 && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) lines.push(currentLine);
+            lines.slice(0, 4).forEach((line, i) => {
+                ctx.fillText(line, 0, -20 + i * 16);
+            });
+
+            ctx.restore();
+
+            // Targeting instructions
+            ctx.font = '14px PixelFont, monospace';
+            ctx.fillStyle = '#fbbf24';
+            ctx.textAlign = 'center';
+            ctx.fillText('SELECT TARGET GROUND UNIT', engine.width / 2, 40);
+            ctx.font = '10px PixelFont, monospace';
+            ctx.fillStyle = '#888';
+            ctx.fillText('Click enemy ground unit to target | Right-click to cancel', engine.width / 2, 60);
         }
 
         // Message (when not in selection mode)
@@ -3415,6 +3545,63 @@ export class Game {
             ctx.fillStyle = '#888';
             ctx.textAlign = 'center';
             ctx.fillText('Click anywhere to close', engine.width / 2, engine.height - 30);
+        }
+
+        // Game Over overlay with restart button
+        if (this.gameOver && this.winner) {
+            // Dim background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(0, 0, engine.width, engine.height);
+
+            // Winner text
+            ctx.font = '32px PixelFont, monospace';
+            ctx.fillStyle = this.winner === 'Player 1' ? '#4ecdc4' : '#a855f7';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${this.winner} WINS!`, engine.width / 2, engine.height / 2 - 60);
+
+            ctx.font = '16px PixelFont, monospace';
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('Planetary Consciousness achieved!', engine.width / 2, engine.height / 2 - 20);
+
+            // Restart button
+            const btnW = 150;
+            const btnH = 40;
+            const btnX = engine.width / 2 - btnW / 2;
+            const btnY = engine.height / 2 + 30;
+            const btnHover = engine.mouse.x >= btnX && engine.mouse.x <= btnX + btnW &&
+                            engine.mouse.y >= btnY && engine.mouse.y <= btnY + btnH;
+
+            ctx.save();
+            if (btnHover) {
+                ctx.shadowColor = '#22c55e';
+                ctx.shadowBlur = 15;
+            }
+
+            const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH);
+            btnGrad.addColorStop(0, btnHover ? '#2a6a3e' : '#1a4a2e');
+            btnGrad.addColorStop(1, btnHover ? '#1a4a2e' : '#0a2a1a');
+
+            Draw.roundRect(ctx, btnX, btnY, btnW, btnH, 8);
+            ctx.fillStyle = btnGrad;
+            ctx.fill();
+
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = btnHover ? 3 : 2;
+            ctx.stroke();
+
+            ctx.font = '14px PixelFont, monospace';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('NEW GAME', btnX + btnW / 2, btnY + btnH / 2);
+
+            ctx.restore();
+
+            // Handle restart click
+            if (engine.mouse.clicked && btnHover) {
+                this.resetGame();
+            }
         }
     }
 
@@ -4208,6 +4395,75 @@ export class Game {
         return true;
     }
 
+    // Reset the game to initial state
+    resetGame() {
+        // Draw new static cards
+        this.planet = pickRandom(planetDeck);
+        this.artifact = pickRandom(artifactDeck);
+        this.natives = pickRandom(nativesDeck);
+
+        // Reset P1
+        this.p1Deck = new Deck(0, 0, true, []);
+        this.p1Graveyard = new Graveyard(0, 0, true);
+        this.p1Gates = [new Gate(0, 0, true)];
+        this.p1Orbit = [];
+        this.p1Planet = [];
+        this.p1Hand = [];
+
+        // Reset P2
+        this.p2Deck = new Deck(0, 0, false, []);
+        this.p2Graveyard = new Graveyard(0, 0, false);
+        this.p2Gates = [new Gate(0, 0, false)];
+        this.p2Orbit = [];
+        this.p2Planet = [];
+        this.p2Hand = [];
+
+        // Reset all state flags
+        this.hoveredCard = null;
+        this.hoveredBattlefieldCard = null;
+        this.eventAnimations = [];
+        this.selectingGate = false;
+        this.selectedCardIndex = -1;
+        this.equipmentCard = null;
+        this.garrisonUnit = null;
+        this.planetaryGenerator = null;
+        this.combatAttackers = [];
+        this.combatTarget = null;
+        this.inCombatSelection = false;
+        this.p1Research = 0;
+        this.p2Research = 0;
+        this.p1Energy = 0;
+        this.p2Energy = 0;
+        this.p1MaxEnergy = 0;
+        this.p2MaxEnergy = 0;
+        this.eventCard = null;
+        this.enlargedCard = null;
+        this.viewingGraveyard = null;
+        this.draggingCard = null;
+        this.draggingHandCard = null;
+        this.draggingHandCardIndex = -1;
+        this.hoveredHandIndex = -1;
+        this.lastHoveredHandIndex = -1;
+
+        // Reset display cards
+        this.planetCard = new DisplayCard(0, 0, this.planet, 'PLANET');
+        this.artifactCard = new DisplayCard(0, 0, this.artifact, 'ARTIFACT');
+        this.nativesCard = new DisplayCard(0, 0, this.natives, 'NATIVES');
+
+        // Reset game state
+        this.turn = 1;
+        this.isPlayer1Turn = true;
+        this.gateActionUsed = false;
+        this.gameOver = false;
+        this.winner = null;
+        this.message = '';
+        this.messageTimer = 0;
+        this.initialized = false;
+
+        // Reload decks and start fresh
+        this._loadDecks();
+    }
+
     // Flip generator control when destroyed
     flipGeneratorControl() {
         if (!this.planetaryGenerator) return;
@@ -4567,11 +4823,11 @@ export class Game {
             return true;
         }
 
-        // Orbital Strike (needs targeting)
+        // Orbital Strike / Bombardment (needs targeting)
         if (name.includes('orbital strike') || name.includes('bombardment')) {
             this.eventCard = card;
             this.eventIsPlayer1 = isPlayer1;
-            this.showMessage('Select target ground unit for Orbital Strike');
+            // Don't show message - UI will show targeting instructions
             return false; // Don't complete yet, need target
         }
 
