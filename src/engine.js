@@ -10,12 +10,14 @@ export class Engine {
         this.width = 0;
         this.height = 0;
 
-        this.mouse = { x: 0, y: 0, down: false, clicked: false };
+        this.mouse = { x: 0, y: 0, down: false, clicked: false, rightClicked: false, doubleClicked: false };
+        this.lastClickTime = 0;
         this.lastTime = 0;
         this.deltaTime = 0;
 
         this.entities = [];
         this.animations = [];
+        this.renderCallback = null;
 
         this._setupCanvas();
         this._setupInput();
@@ -54,9 +56,20 @@ export class Engine {
             this.mouse.y = e.clientY;
         });
 
-        this.canvas.addEventListener('mousedown', () => {
-            this.mouse.down = true;
-            this.mouse.clicked = true;
+        this.canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+                this.mouse.down = true;
+                this.mouse.clicked = true;
+
+                // Double-click detection (300ms window)
+                const now = performance.now();
+                if (now - this.lastClickTime < 300) {
+                    this.mouse.doubleClicked = true;
+                }
+                this.lastClickTime = now;
+            } else if (e.button === 2) {
+                this.mouse.rightClicked = true;
+            }
         });
 
         this.canvas.addEventListener('mouseup', () => {
@@ -66,6 +79,11 @@ export class Engine {
         this.canvas.addEventListener('mouseleave', () => {
             this.mouse.x = -1000;
             this.mouse.y = -1000;
+        });
+
+        // Prevent context menu on right-click
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
         });
     }
 
@@ -159,11 +177,14 @@ export class Engine {
                 if (entity.render) entity.render(this.ctx, this);
             }
 
-            // Custom update
-            if (updateCallback) updateCallback(this.deltaTime, this);
+            // Custom update - use renderCallback if set, otherwise use initial callback
+            const callback = this.renderCallback || updateCallback;
+            if (callback) callback(this.deltaTime, this);
 
             // Reset click state
             this.mouse.clicked = false;
+            this.mouse.rightClicked = false;
+            this.mouse.doubleClicked = false;
 
             requestAnimationFrame(loop);
         };

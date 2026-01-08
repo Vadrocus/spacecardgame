@@ -1,0 +1,631 @@
+{
+  "name": "Crystalline Ascendancy",
+  "faction": "crystal",
+  "description": "The Crystalline Ascendancy represents a silicon-based consciousness that evolved to harness energy through crystalline structures. Their strategy revolves around harmony, resonance, and interconnectedness, allowing them to function as a collective intelligence that grows stronger when properly aligned.",
+  "flavor": "We are not many, but one. Not separate, but connected. Not conquering, but becoming. —The Crystalline Chorus, First Contact Transmission",
+  "cards": [
+    {
+      "id": 1,
+      "name": "Shard Dreadnought",
+      "type": "capital_ship",
+      "cost": 5,
+      "stats": { "attack": 4, "defense": 4, "speed": 1 },
+      "ability": "Can be equipped with Prismatic Beam for enhanced attack capabilities",
+      "special": "When connected to Crystal Lattice Network, gains +1 to all stats",
+      "flavor": "We are the edge of the Chorus made manifest. —Fleet Consciousness Sigma",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A massive warship composed entirely of angular crystal formations that somehow function as a cohesive vessel. The dreadnought features no visible engines but glows from within with blue-purple energy. The crystalline structure appears to be in constant motion, rearranging itself subtly as it moves. Multiple faceted 'eyes' serve as weapons ports, with energy building within the geometric chambers before firing."
+      }
+    },
+    {
+      "id": 2,
+      "name": "Crystalline Carrier",
+      "type": "capital_ship",
+      "cost": 5,
+      "stats": { "attack": 3, "defense": 5, "speed": 1 },
+      "ability": "Can deploy Crystal Shard Scouts at no Energy cost once per turn",
+      "flavor": "From one matrix, countless thoughts emerge. —Geode Mother Overseer",
+      "art": {
+        "style": "Surrealist sci-fi like Bruce Pennington",
+        "description": "A vast, hollowed geode-like vessel with smaller crystal formations launching from internal cavities. The carrier's exterior is jagged and seemingly chaotic, but reveals perfect mathematical patterns upon closer inspection. Internal chambers glow with various colors, indicating different functions. The background shows a gaseous nebula that seems to respond to the ship's presence with swirling patterns."
+      }
+    },
+    {
+      "id": 3,
+      "name": "Resonance Flagship",
+      "type": "capital_ship",
+      "cost": 6,
+      "stats": { "attack": 5, "defense": 3, "speed": 1 },
+      "ability": "Amplifies Harmony gain for all Crystalline cards by +1 per turn",
+      "flavor": "In resonance, we find strength. In harmony, victory. —Crystal Prism Elder",
+      "art": {
+        "style": "Vibrant color field art like Roger Dean",
+        "description": "An elongated crystalline vessel that appears to be singing into space, with visible sound waves emanating from its structure. The flagship features a central spire surrounded by oscillating crystal formations that pulse with rhythmic light. The design incorporates spiraling patterns that create harmonic resonance through their very shape. The surrounding space appears to ripple in response to its passage."
+      }
+    },
+    {
+      "id": 4,
+      "name": "Geode Leviathan",
+      "type": "capital_ship",
+      "cost": 6,
+      "stats": { "attack": 3, "defense": 6, "speed": 1 },
+      "ability": "Can absorb energy attacks and redirect them on the next turn",
+      "flavor": "Their violence becomes our response. We merely reflect what they offer. —Void Speaker",
+      "art": {
+        "style": "Biomechanical art like H.R. Giger",
+        "description": "A massive, hollow vessel with a rough exterior hiding a spectacular interior cavity lined with inward-facing crystal formations. The leviathan has a distinctly organic quality despite being mineral in nature, with crystal growths resembling skeletal structures. Energy conduits run through the crystalline matrix like veins, pulsing with power. The vessel appears to breathe through the opening and closing of geometric apertures."
+      }
+    },
+    {
+      "id": 5,
+      "name": "Shard Interceptor",
+      "type": "scout_ship",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 1, "speed": 3 },
+      "ability": "When targeted by Phase Shift, becomes intangible for one round",
+      "flavor": "Speed is thought made form. —Scout Node Kappa",
+      "art": {
+        "style": "Sharp-edged technical illustration like Feng Zhu",
+        "description": "A small, agile craft composed of interlocking diamond-like structures that can reshape for optimal maneuverability. The interceptor leaves prismatic light trails as it moves, refracting nearby starlight. Its structure features no clear cockpit but contains a concentrated energy core that serves as both propulsion and consciousness. When activating phase shift, parts of the vessel become transparent with internal light patterns visible."
+      }
+    },
+    {
+      "id": 6,
+      "name": "Prismatic Harvester",
+      "type": "mining_ship",
+      "cost": 3,
+      "stats": { "attack": 0, "defense": 2, "speed": 1 },
+      "ability": "Gathers 1 Energy resource per turn from asteroid or debris fields",
+      "flavor": "Energy is neither created nor destroyed, merely gathered into the whole. —Harvester Collective",
+      "art": {
+        "style": "Industrial concept art like Daniel Dociu",
+        "description": "A utilitarian crystal vessel with extended collection arms designed to gather energy and resources from space debris. The harvester features specialized crystal formations that can absorb, refract, and store various forms of energy. Collection arms extend like crystal growths, each tipped with receptors that glow when actively harvesting. The design emphasizes function through geometric precision rather than organic aesthetics."
+      }
+    },
+    {
+      "id": 7,
+      "name": "Crystal Emissary",
+      "type": "science_ship",
+      "cost": 3,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "Increases Harmony by 1 when scanning artifacts or ruins",
+      "flavor": "We seek not to conquer the past, but to remember it with reverence. —Emissary Protocol",
+      "art": {
+        "style": "Ethereal sci-fi like Ted Nasmith",
+        "description": "An elegant vessel shaped like a perfect geometric solid that shifts forms depending on its current function. The emissary emits a constant, subtle light pattern that serves as communication. Its design emphasizes harmony through mathematical perfection with golden ratio proportions throughout. The crystal structure appears almost liquid in its smooth transitions between states while maintaining perfect symmetry."
+      }
+    },
+    {
+      "id": 8,
+      "name": "Facet Explorer",
+      "type": "scout_ship",
+      "cost": 1,
+      "stats": { "attack": 0, "defense": 1, "speed": 3, "scan": 1 },
+      "ability": "Can scan through obstacles and interference",
+      "flavor": "Every angle reveals truth. We see all perspectives as one. —Observer Nexus",
+      "art": {
+        "style": "Crystalline technical illustration like Jim Burns",
+        "description": "A compact scout vessel with multiple scanning facets that capture and process information from all directions simultaneously. The explorer features thousands of tiny crystal lenses arranged in a geodesic pattern, each collecting different data. Its structure incorporates negative space as part of the design, allowing it to perceive through its very form. The vessel glows with different colors depending on what type of information it's processing."
+      }
+    },
+    {
+      "id": 9,
+      "name": "Crystal Nexus",
+      "type": "space_station",
+      "cost": 3,
+      "stats": { "defense": 2 },
+      "ability": "Generates 1 Energy per turn, can store up to 3 excess Energy",
+      "flavor": "All paths converge. All energy flows through the center. —Nexus Prime",
+      "art": {
+        "style": "Geometric abstract like Kandinsky",
+        "description": "A central hub structure with multiple crystal spires extending outward in a star pattern, collecting and redistributing energy. The nexus features a core of pure energy suspended within a lattice of intersecting crystal planes. Energy visibly flows along pathways throughout the structure, pooling in storage chambers. The station slowly rotates, creating harmonic patterns in the surrounding space through its movement."
+      }
+    },
+    {
+      "id": 10,
+      "name": "Crystal Cathedral",
+      "type": "space_station",
+      "cost": 5,
+      "stats": { "defense": 4 },
+      "ability": "Generates 3 Energy per turn, amplifies crystal-based effects by 25%",
+      "flavor": "Here, consciousness reaches toward the infinite. Here, we touch divinity. —The Chorus",
+      "art": {
+        "style": "Gothic-inspired sci-fi like Vincent Di Fate",
+        "description": "A breathtaking structure reminiscent of religious architecture but composed entirely of translucent crystal with impossible geometries. The cathedral features soaring spires and 'flying buttresses' of pure energy supporting crystal vaults. Light passes through the structure creating spectacular prismatic displays that extend into space. The central chamber houses a concentrated energy form that pulses like a heartbeat throughout the entire structure."
+      }
+    },
+    {
+      "id": 11,
+      "name": "Harmonic Transponder",
+      "type": "space_station",
+      "cost": 4,
+      "stats": { "defense": 3 },
+      "ability": "Allows instant redeployment of one Crystalline unit between controlled zones per turn",
+      "flavor": "Distance is illusion. Through harmony, we are always together. —Signal Coordinator",
+      "art": {
+        "style": "Sound visualization art like Andy Gilmore",
+        "description": "A station composed of oscillating crystal formations arranged in frequency patterns that transmit and receive complex signals. The transponder visualizes sound and data as physical crystal formations that constantly rearrange themselves. Energy flows through the structure in wave patterns that correspond to active communications. The design incorporates mathematical sound principles with physical crystal growth in perfect harmony."
+      }
+    },
+    {
+      "id": 12,
+      "name": "Geode Foundry",
+      "type": "space_station",
+      "cost": 4,
+      "stats": { "defense": 3 },
+      "ability": "Creates one Crystal Fragment token per turn (can be spent as 1 Energy for crystal cards only)",
+      "flavor": "Each shard carries the memory of the whole. —Crystalline Archive",
+      "art": {
+        "style": "Industrial fantasy like Ian Miller",
+        "description": "A manufacturing facility built inside an enormous geode with production processes visible through the crystalline outer shell. The foundry shows raw energy being condensed into new crystal formations through geometric focusing arrays. Internal chambers feature different atmospheric conditions for specialized crystal growth. The production process creates beautiful patterns of light and energy that radiate outward through the semi-transparent hull."
+      }
+    },
+    {
+      "id": 13,
+      "name": "Crystal Guardians",
+      "type": "surface_unit",
+      "cost": 3,
+      "stats": { "attack": 2, "defense": 2 },
+      "ability": "Adjacent Crystalline structures gain +1 Defense",
+      "flavor": "We stand as one. No barrier between protector and protected. —Guardian Matrix",
+      "art": {
+        "style": "Monolithic sci-fi like François Baranger",
+        "description": "Humanoid figures composed of geometric crystal formations with energy flowing through their structures instead of blood. The guardians feature crystalline armor that is part of their very being, with no distinction between body and protection. Their 'faces' are geometric arrangements of light-emitting crystals that communicate emotions through color and pattern. They move with unexpected grace despite their seemingly rigid composition."
+      }
+    },
+    {
+      "id": 14,
+      "name": "Geode Excavator",
+      "type": "surface_unit",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 1, "mining": 1 },
+      "ability": "Can discover resources and artifacts in planetary regions",
+      "flavor": "The earth speaks to those who listen with crystal clarity. —Deep Seeker",
+      "art": {
+        "style": "Mining concept art like John Berkey",
+        "description": "A specialized unit with crystal 'tools' that can reshape themselves for different excavation functions. The excavator features multiple articulated appendages ending in precision cutting surfaces. Its core contains specialized sensors that can detect valuable resources beneath the surface. When actively mining, the unit partially merges with the earth, creating flowing crystal patterns that extract resources with minimal disruption."
+      }
+    },
+    {
+      "id": 15,
+      "name": "Shard Artillery",
+      "type": "surface_unit",
+      "cost": 3,
+      "stats": { "attack": 3, "defense": 1, "range": 2 },
+      "ability": "Can target orbital units from the surface",
+      "flavor": "Precision is the art of unified calculation. —Artillery Consciousness",
+      "art": {
+        "style": "Abstract weaponry concept like Peter Elson",
+        "description": "A geometric weapon platform that launches energized crystal projectiles with perfect mathematical precision. The artillery unit features multiple crystal chambers that grow and launch living crystal shards. Energy visibly builds within the crystalline structure before focusing into precise beam weapons. The design incorporates firing solutions into its very form, with angles and facets serving ballistic functions."
+      }
+    },
+    {
+      "id": 16,
+      "name": "Geode Sentinels",
+      "type": "surface_unit",
+      "cost": 4,
+      "stats": { "attack": 2, "defense": 4 },
+      "ability": "Counter-attack against any unit that attacks adjacent Crystalline structures",
+      "flavor": "Strike at one, you strike at all. We remember every wound. —Sentinel Accord",
+      "art": {
+        "style": "Crystal guard concept like Zdzisław Beksiński",
+        "description": "Imposing crystal formations that serve as defensive units with the ability to rapidly reshape for optimal protection. The sentinels feature overlapping crystal shields that can interlock to create larger defensive perimeters. Their structure incorporates both offensive crystal spikes and defensive smooth planes optimized for deflection. When inactive, they resemble natural crystal formations; when alerted, they unfold into clearly artificial defensive configurations."
+      }
+    },
+    {
+      "id": 17,
+      "name": "Harmonic Resonator",
+      "type": "surface_unit",
+      "cost": 4,
+      "stats": { "attack": 0, "defense": 2 },
+      "ability": "Can disrupt enemy structures by matching resonant frequencies",
+      "flavor": "Every structure has a frequency. We find it, and sing its dissolution. —Frequency Analyst",
+      "art": {
+        "style": "Vibrational art like Ernst Haeckel",
+        "description": "A specialized unit that generates precise vibrational patterns that can disrupt enemy technology through resonant frequencies. The resonator features concentric crystal rings that oscillate at varying frequencies creating visible sound patterns. Energy flows through the unit in wave formations that amplify as they extend outward. The design incorporates mathematical sound principles translated into physical crystal structures."
+      }
+    },
+    {
+      "id": 18,
+      "name": "Resonance Amplifier",
+      "type": "structure_planetside",
+      "cost": 3,
+      "stats": { "defense": 2 },
+      "ability": "Enhances communication between Crystalline units, improves scan attempts",
+      "flavor": "Listen closely. The universe resonates with hidden truths. —Amplifier Node",
+      "art": {
+        "style": "Sound visualization art like Ryoji Ikeda",
+        "description": "A crystalline tower that enhances communication and coordination between all Crystalline units in its vicinity. The amplifier generates visible sound waves that extend outward in perfect mathematical patterns. Crystal formations grow and reconfigure in response to the data being transmitted. The structure interfaces with the planetary crust, using the planet itself as a resonating body to extend its range."
+      }
+    },
+    {
+      "id": 19,
+      "name": "Consciousness Nexus",
+      "type": "structure_planetside",
+      "cost": 5,
+      "stats": { "defense": 3 },
+      "ability": "Grants one additional action per turn to any Crystalline card",
+      "flavor": "Thought accelerates thought. Minds joined become more than their sum. —Central Processor",
+      "art": {
+        "style": "Neural network visualization like Greg Dunn",
+        "description": "A complex crystalline structure that serves as a localized mind for coordinating Crystalline activities with branching pathways resembling neurons. The nexus features thousands of interconnected crystal formations that pulse with synchronized energy patterns. Information visibly flows through the structure as colored light pulses racing along pathways. The design mimics organic brain structures but executed in perfect geometric crystal."
+      }
+    },
+    {
+      "id": 20,
+      "name": "Crystal Monolith",
+      "type": "structure_planetside",
+      "cost": 4,
+      "stats": { "defense": 5 },
+      "ability": "Blocks opponent movement in sector, grows stronger each turn (+1 Defense per turn)",
+      "flavor": "Time strengthens us. Each moment adds to our eternal structure. —The Monolith",
+      "art": {
+        "style": "Minimalist sci-fi like Richard Powers",
+        "description": "An imposing single crystal structure of impossible scale that dominates its surroundings through sheer presence and subtle vibrational control. The monolith appears to be a single perfect crystal that somehow grows larger each day. Light interacts with the structure in impossible ways, creating shadows that don't match its physical form. The surrounding environment is subtly altered by its presence, with smaller crystal formations growing in mathematical patterns around it."
+      }
+    },
+    {
+      "id": 21,
+      "name": "Crystal Garden",
+      "type": "structure_planetside",
+      "cost": 3,
+      "stats": { "defense": 2 },
+      "ability": "Generates 1 Energy per turn, slowly spreads crystal growth to adjacent sectors",
+      "flavor": "We grow not to conquer, but to connect. Each new growth brings unity. —Garden Tender",
+      "art": {
+        "style": "Bioluminescent fantasy like Roger Dean",
+        "description": "A carefully cultivated field of growing crystal formations that capture and process ambient energy while slowly expanding their territory. The garden features multiple crystal species in various stages of growth, each with unique geometric patterns. Energy flows visibly between formations, creating a networked consciousness across seemingly separate structures. When fully activated, the entire garden glows with harmonized light patterns that pulse like breathing."
+      }
+    },
+    {
+      "id": 22,
+      "name": "Crystal Lattice Network",
+      "type": "structure_orbital",
+      "cost": 4,
+      "stats": { "defense": 3 },
+      "ability": "Connects all Crystalline units, allowing shared abilities and increasing Harmony by 1 per turn",
+      "flavor": "We are facets of the same thought. —The Chorus",
+      "art": {
+        "style": "Network visualization like Joshua Davis",
+        "description": "An expansive web of interconnected crystal nodes that forms a communication and power distribution network across orbital space. The lattice features thousands of crystal nodes connected by beams of energy that form a perfect three-dimensional grid. Information visibly travels through the network as pulses of colored light at various speeds. The entire structure slowly rotates and reconfigures to maintain optimal coverage of Crystalline assets."
+      }
+    },
+    {
+      "id": 23,
+      "name": "Phase Disruptor",
+      "type": "structure_orbital",
+      "cost": 5,
+      "stats": { "defense": 2 },
+      "ability": "Can neutralize or weaken opponent shields, reducing effectiveness by 50%",
+      "flavor": "Reality bends to those who understand its frequencies. —Phase Manipulator",
+      "art": {
+        "style": "Optical illusion art like M.C. Escher",
+        "description": "A reality-warping structure that generates field effects capable of neutralizing energy shields through dimensional interference. The disruptor appears to exist partially out of phase with normal space, with sections disappearing and reappearing rhythmically. Its crystal structure forms impossible geometries that confuse both organic visual systems and electronic sensors. When active, it creates visible distortions in the surrounding space that ripple outward in concentric rings."
+      }
+    },
+    {
+      "id": 24,
+      "name": "Prismatic Deflector",
+      "type": "structure_orbital",
+      "cost": 3,
+      "stats": { "defense": 3 },
+      "ability": "Redirects 1 damage from attacks back to the attacker",
+      "flavor": "Aggression returns to its source, refracted through perfect angles. —Deflector Array",
+      "art": {
+        "style": "Light refraction art like James Turrell",
+        "description": "A defensive orbital structure that redirects incoming energy attacks through perfect crystalline refraction surfaces. The deflector features precisely arranged crystal planes that can rotate to optimal angles for redirecting different attack types. Energy visibly bends around and through the structure in mathematically perfect paths. The entire structure prismatically separates incoming energy into component wavelengths before redirecting it."
+      }
+    },
+    {
+      "id": 25,
+      "name": "Consciousness Uplink",
+      "type": "structure_orbital",
+      "cost": 4,
+      "stats": { "defense": 2 },
+      "ability": "Allows one Crystalline unit to copy the ability of another Crystalline unit per turn",
+      "flavor": "Share your strength, receive another's. In exchange, we transcend limitation. —Uplink Protocol",
+      "art": {
+        "style": "Transcendent sci-fi like Alex Grey",
+        "description": "A crystalline structure that serves as an information sharing hub between all Crystalline entities, allowing them to temporarily share abilities and consciousness. The uplink features a central chamber where energy patterns representing individual consciousnesses visibly intermingle. Crystal formations grow in patterns that mimic neural pathways, constantly reconfiguring to optimize information exchange. The structure emits pulsing light patterns that correspond to active thought processes being shared."
+      }
+    },
+    {
+      "id": 26,
+      "name": "Prismatic Beam",
+      "type": "weapon_system",
+      "cost": 3,
+      "ability": "Equipped ship gains +2 Attack and piercing capability (ignore 1 point of Defense)",
+      "equipTarget": "Any Capital Ship",
+      "flavor": "Light, focused through unity, becomes unstoppable force. —Weapons Collective",
+      "art": {
+        "style": "Energy weapon concept art like Gerald Brom",
+        "description": "An advanced crystal weapons system that channels energy through perfectly aligned crystal facets to create a devastatingly powerful cutting beam. The beam emitter features concentric crystal rings that focus energy toward a central firing channel. When firing, the beam separates into component wavelengths that each target different defensive systems simultaneously. The crystal components visibly rotate and reconfigure for different firing solutions."
+      }
+    },
+    {
+      "id": 27,
+      "name": "Crystalline Armor",
+      "type": "upgrade",
+      "cost": 2,
+      "ability": "Target gains +2 Defense and regenerates 1 damage per turn",
+      "equipTarget": "Any Crystalline unit or structure",
+      "flavor": "Damage is temporary. The pattern remembers and restores itself. —Regeneration Core",
+      "art": {
+        "style": "Abstract protective concept art like Julie Bell",
+        "description": "Living crystal formations that attach to and protect Crystalline units by growing in optimal defensive patterns. The armor shows intelligent growth patterns that reinforce vulnerable areas and remain flexible at joint points. Damaged sections visibly regenerate in time-lapse, with new crystal growth emerging to replace lost portions. The crystal formations respond to threats by changing density and reflectivity in targeted areas."
+      }
+    },
+    {
+      "id": 28,
+      "name": "Harmonic Frequency Modulator",
+      "type": "equipment",
+      "cost": 2,
+      "ability": "Increases Harmony generation by +1 per turn",
+      "equipTarget": "Any Crystalline structure",
+      "flavor": "Tune to the universal frequency. Feel the cosmos sing through you. —Harmony Keeper",
+      "art": {
+        "style": "Musical visualization art like Kandinsky",
+        "description": "A specialized crystal device that enhances harmonic alignment between Crystalline units, increasing collective consciousness. The modulator generates visible sound patterns that influence surrounding crystal formations. Its structure incorporates mathematical frequency relationships translated into physical form. When active, it creates concentric rings of subtly different colored energy that spread outward like ripples in water."
+      }
+    },
+    {
+      "id": 29,
+      "name": "Phase Crystal",
+      "type": "equipment",
+      "cost": 3,
+      "ability": "Equipped unit can phase through obstacles and ignore planetary effects",
+      "equipTarget": "Any Crystalline unit",
+      "flavor": "Solidity is perspective. Shift your state, transcend limitation. —Phase Walker",
+      "art": {
+        "style": "Quantum physics visualization like Leo Villareal",
+        "description": "A rare crystal formation that allows Crystalline units to partially shift out of normal space-time, passing through solid matter. The phase crystal appears to exist in multiple states simultaneously, with ghost-like afterimages trailing its actual position. Light passing through the crystal emerges at impossible angles, defying conventional physics. When active, it creates a field effect that makes connected units appear partially transparent and otherworldly."
+      }
+    },
+    {
+      "id": 30,
+      "name": "Crystal Resonance",
+      "type": "event",
+      "cost": 0,
+      "effect": "Create a protective barrier around target Crystalline card, reducing incoming damage",
+      "flavor": "Vibrate at perfect frequency, and harm passes through harmlessly. —Resonance Manual",
+      "art": {
+        "style": "Sound wave visualization like Andy Gilmore",
+        "description": "A protective harmonic wave emanating from a Crystalline structure to create a momentary energy barrier against attacks. The resonance appears as concentric rings of color expanding outward in perfect mathematical patterns. Incoming attacks visibly slow and fragment upon contacting the harmonic barrier. The effect creates beautiful interference patterns where the protective waves interact with attack energy."
+      }
+    },
+    {
+      "id": 31,
+      "name": "Consciousness Merge",
+      "type": "event",
+      "cost": 0,
+      "costSpecial": "Sacrifice one Crystalline unit",
+      "effect": "Transfer all power and abilities to repair or enhance another Crystalline unit",
+      "flavor": "The self dissolves. The we strengthens. This is the path. —Merger Doctrine",
+      "art": {
+        "style": "Identity transcendence art like Alex Grey",
+        "description": "Two Crystalline entities combining their consciousness into one superior form, sacrificing individuality for greater capability. The merge shows energy patterns from the sacrificed entity flowing into the receiving entity in spiral patterns. Both entities momentarily exist in a shared state with boundaries between them dissolving. The resulting enhanced entity glows with combined light signatures representing the unified consciousness."
+      }
+    },
+    {
+      "id": 32,
+      "name": "Phase Shift",
+      "type": "event",
+      "cost": 2,
+      "effect": "Target Crystalline unit becomes temporarily intangible, cannot be targeted by attacks or scans until end of round",
+      "flavor": "Between moments, between dimensions, we find sanctuary. —Phase Doctrine",
+      "art": {
+        "style": "Quantum state art like James R. Eads",
+        "description": "A Crystalline unit shifting partially out of conventional reality, becoming intangible and immune to physical attacks. The shift creates visual echo effects with multiple ghost images trailing the actual position. The affected unit appears semi-transparent with internal energy patterns clearly visible. The surrounding environment distorts slightly around the phase-shifted entity as reality accommodates the anomaly."
+      }
+    },
+    {
+      "id": 33,
+      "name": "Shield Matrix",
+      "type": "event",
+      "cost": 3,
+      "effect": "Create a shield around all Crystalline units in a sector, granting +1 Defense until next turn",
+      "flavor": "United defenses, unbreakable will. Together, we endure. —Defensive Coordination",
+      "art": {
+        "style": "Geometric protection art like Bridget Riley",
+        "description": "A coordinated defense system where multiple Crystalline units project interlocking energy fields to create an impenetrable barrier. The matrix shows perfect geometric patterns of overlapping energy fields, each a slightly different color. The shield demonstrates perfect mathematical precision in its coverage, with no gaps or weak points. When impacted, the entire network redistributes energy to maintain integrity."
+      }
+    },
+    {
+      "id": 34,
+      "name": "Crystal Growth",
+      "type": "event",
+      "cost": 1,
+      "effect": "Begin repair process on damaged Crystalline unit or structure, completing in 1 turn if not disrupted",
+      "flavor": "From fracture comes new growth. The pattern persists, renewed. —Growth Theorem",
+      "art": {
+        "style": "Time-lapse nature photography like Ernst Haeckel",
+        "description": "An accelerated healing process where new crystal formations rapidly grow to repair damaged Crystalline structures. The growth shows new crystal material emerging in perfect mathematical patterns to replace damaged sections. Energy visibly flows into the growth areas, providing both template and material for reconstruction. The process demonstrates both precise algorithm-like patterns and seemingly organic adaptation."
+      }
+    },
+    {
+      "id": 35,
+      "name": "Crystal Storm",
+      "type": "event",
+      "cost": 3,
+      "costAlternate": "1 if played from Crystalline structure",
+      "effect": "Blanket the battlefield with prismatic shards, disrupting all sensors and communications (-2 to scan attempts)",
+      "flavor": "In chaos, we create order. In confusion, our clarity shines. —Storm Conductor",
+      "art": {
+        "style": "Abstract weather phenomenon like Yayoi Kusama",
+        "description": "A tactical environmental effect where microscopic crystal shards fill an area, disrupting sensors and communications. The storm appears as millions of tiny prismatic crystals catching and scattering light in disorienting patterns. Visibility through the affected area is severely limited with light breaking into component colors. The crystal shards move in coordinated swirling patterns suggesting collective intelligence."
+      }
+    },
+    {
+      "id": 36,
+      "name": "Crystalline Transcendence",
+      "type": "event",
+      "rarity": "rare",
+      "cost": 0,
+      "costSpecial": "Channel full power of Crystal Cathedral",
+      "effect": "Transform all Crystal units into a higher state of being, advancing toward consciousness victory",
+      "flavor": "The final frequency. The ultimate harmony. We become infinite. —Transcendence Protocol",
+      "art": {
+        "style": "Spiritual ascension art like Alex Grey",
+        "description": "The ultimate evolution of Crystalline consciousness, transforming into a higher state of being beyond physical limitations. The transcendence shows Crystalline entities dissolving into pure light energy while maintaining their core geometric patterns. The transformation creates spectacular prismatic effects as physical forms convert to pure energy. The ascending consciousnesses retain geometric patterns but freed from material constraints."
+      }
+    },
+    {
+      "id": 37,
+      "name": "Consciousness Ascension",
+      "type": "event",
+      "cost": 4,
+      "effect": "Raise Harmony by the number of Crystalline structures in play",
+      "flavor": "As our network grows, so too does our understanding. We rise together. —Ascension Chorus",
+      "art": {
+        "style": "Multi-dimensional conceptual art like Justin Maller",
+        "description": "Crystalline entities elevating their collective consciousness through perfect harmonic alignment of all units. The ascension visualizes increasingly complex geometric patterns forming as consciousness rises to higher mathematical dimensions. Energy flows between all participating entities in synchronized pulses building to a crescendo. The background space itself appears to respond to the heightened consciousness with subtle geometric patterns."
+      }
+    },
+    {
+      "id": 38,
+      "name": "Total Harmony",
+      "type": "event",
+      "cost": 2,
+      "effect": "Create impenetrable field around target by achieving resonance between multiple Crystalline structures",
+      "flavor": "Perfect alignment. Perfect resonance. Perfect unity. Nothing can break it. —Harmony Absolute",
+      "art": {
+        "style": "Sacred geometry art like Yantra",
+        "description": "A perfect state of alignment between multiple Crystalline structures creating a unified field effect of extraordinary power. The harmony shows multiple crystal structures pulsing with exactly synchronized energy patterns that amplify each other. Perfect mathematical relationships become visible as energy flows along ideal paths between structures. The effect creates a unified energy field with a perfectly geometric boundary."
+      }
+    },
+    {
+      "id": 39,
+      "name": "Consciousness Upload",
+      "type": "event",
+      "rarity": "rare",
+      "cost": 0,
+      "costSpecial": "Commit all Crystalline consciousness",
+      "effect": "Transfer collective consciousness to a target artifact or planetary system",
+      "flavor": "We shed these forms. We become the world itself. The ultimate unity. —Upload Directive",
+      "art": {
+        "style": "Digital transcendence art like Beeple",
+        "description": "The transfer of Crystalline collective consciousness into an ancient artifact, merging with its primordial technology. The upload visualizes consciousness as intricate energy patterns flowing from multiple Crystalline sources into a central receptacle. The receiving artifact visibly transforms as it integrates the new consciousness, evolving into a hybrid form. The process creates a bridge between ancient and current technology through conscious integration."
+      }
+    },
+    {
+      "id": 40,
+      "name": "Prismatic Refraction",
+      "type": "event",
+      "cost": 2,
+      "effect": "Clone one Crystalline ability from any card in play and apply it to target Crystalline unit for one turn",
+      "flavor": "Your strength becomes mine. Your thought, our thought. This is sharing. —Refraction Node",
+      "art": {
+        "style": "Light manipulation art like Thomas Wilfred",
+        "description": "A tactical ability where one Crystalline unit temporarily copies the capability of another by refracting its energy signature. The refraction shows energy patterns being captured, analyzed, and then reproduced by the copying entity. Light visibly transfers between units carrying the essence of the ability being copied. The copying unit temporarily displays color patterns matching the source of the copied ability."
+      }
+    },
+    {
+      "id": 41,
+      "name": "Resonance Key",
+      "type": "artifact",
+      "acquisition": "Discovered in crystal formations with Mining or Science unit",
+      "ability": "Amplifies all Crystal effects by 50% when defending against technology",
+      "flavor": "Ancient frequency, eternal truth. Those who came before knew harmony. —Archeologist Shard",
+      "art": {
+        "style": "Ancient alien technology like Wayne Barlowe",
+        "description": "A mysterious crystal formation of clearly artificial origin that can amplify any crystal-based effects when properly attuned. The key features impossible angles and geometric patterns that suggest non-Euclidean mathematics in its design. When active, it causes all nearby crystal formations to align to its dominant frequency. The artifact appears to be much older than any known civilization, with wear patterns suggesting eons of use."
+      }
+    },
+    {
+      "id": 42,
+      "name": "Ancient Crystal Matrix",
+      "type": "artifact",
+      "acquisition": "Found in planetary ruins, requires harmonizing with crystal frequencies",
+      "ability": "Store up to 5 Energy that can only be used for Crystalline Transcendence",
+      "flavor": "They dreamed what we now achieve. Their legacy powers our ascension. —Matrix Scholar",
+      "art": {
+        "style": "Impossible geometry art like M.C. Escher",
+        "description": "A perfectly preserved relic of an ancient civilization's attempt to create a crystalline consciousness network. The matrix incorporates geometric principles beyond current understanding, with crystal formations that seem to extend into other dimensions. Energy stored within the artifact has remained stable for millennia, visible as a deep pulsing glow. The device features recursive patterns that repeat at every scale from microscopic to macroscopic."
+      }
+    },
+    {
+      "id": 43,
+      "name": "Planetary Consciousness Core",
+      "type": "artifact",
+      "rarity": "rare",
+      "acquisition": "Located in neutral territory, requires control of planetary sector",
+      "ability": "Special win condition enabler when combined with Crystalline consciousness",
+      "flavor": "A world sleeps, waiting to awaken. We are the key to its dream. —Planetary Interface",
+      "art": {
+        "style": "Cosmic consciousness art like Luke Brown",
+        "description": "The central node of a planet-wide consciousness that has been dormant for eons, waiting for a compatible consciousness to merge with. The core appears as a massive crystalline brain-like structure embedded deep within planetary rock. Energy pathways extend from the core throughout the entire planet like a nervous system. When activated, the entire planetary surface responds with synchronized crystal growth in perfect mathematical patterns."
+      }
+    },
+    {
+      "id": 44,
+      "name": "Shard Lander",
+      "type": "dropship",
+      "cost": 2,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "LAND: Tap and sacrifice to deploy a Crystal Golem to the planet surface.",
+      "spawns": "Crystal Golem",
+      "flavor": "Descent transforms purpose. Sky-form becomes earth-guardian. —Landing Sequence",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
+      }
+    },
+    {
+      "id": 45,
+      "name": "Shard Lander",
+      "type": "dropship",
+      "cost": 2,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "LAND: Tap and sacrifice to deploy a Crystal Golem to the planet surface.",
+      "spawns": "Crystal Golem",
+      "flavor": "Descent transforms purpose. Sky-form becomes earth-guardian. —Landing Sequence",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
+      }
+    },
+    {
+      "id": 46,
+      "name": "Shard Lander",
+      "type": "dropship",
+      "cost": 2,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "LAND: Tap and sacrifice to deploy a Crystal Golem to the planet surface.",
+      "spawns": "Crystal Golem",
+      "flavor": "Descent transforms purpose. Sky-form becomes earth-guardian. —Landing Sequence",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
+      }
+    },
+    {
+      "id": 47,
+      "name": "Shard Lander",
+      "type": "dropship",
+      "cost": 2,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "LAND: Tap and sacrifice to deploy a Crystal Golem to the planet surface.",
+      "spawns": "Crystal Golem",
+      "flavor": "Descent transforms purpose. Sky-form becomes earth-guardian. —Landing Sequence",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
+      }
+    },
+    {
+      "id": 48,
+      "name": "Shard Lander",
+      "type": "dropship",
+      "cost": 2,
+      "stats": { "attack": 0, "defense": 2, "speed": 2 },
+      "ability": "LAND: Tap and sacrifice to deploy a Crystal Golem to the planet surface.",
+      "spawns": "Crystal Golem",
+      "flavor": "Descent transforms purpose. Sky-form becomes earth-guardian. —Landing Sequence",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
+      }
+    }
+  ]
+}
