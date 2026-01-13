@@ -7,7 +7,7 @@ import { planetDeck, artifactDeck, nativesDeck, shuffle, pickRandom, loadTerranD
 import { Draw } from './engine.js';
 
 // Game version
-const VERSION = '1.1.3';
+const VERSION = '1.1.4';
 
 // Deck class
 export class Deck {
@@ -2862,13 +2862,13 @@ export class Game {
         this.artifactCard.render(ctx);
         this.nativesCard.render(ctx);
 
-        // Render version watermark (right of artifact card)
+        // Render version watermark (left of artifact card, on gameboard edge)
         ctx.save();
         ctx.font = '10px PixelFont, monospace';
         ctx.fillStyle = 'rgba(168, 85, 247, 0.4)'; // Purple with transparency
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        const watermarkX = this.artifactCard.x + 50;
+        const watermarkX = this.boardX + this.boardW - 10;
         const watermarkY = this.midY;
         ctx.fillText('scg', watermarkX, watermarkY - 8);
         ctx.fillText(`v${VERSION}`, watermarkX, watermarkY + 8);
