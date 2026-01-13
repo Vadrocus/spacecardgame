@@ -6,6 +6,9 @@ import { Card, CARD_WIDTH, CARD_HEIGHT } from './card.js';
 import { planetDeck, artifactDeck, nativesDeck, shuffle, pickRandom, loadTerranDeck, loadCrystalDeck, getDeckCards } from './data.js';
 import { Draw } from './engine.js';
 
+// Game version
+const VERSION = '1.1.3';
+
 // Deck class
 export class Deck {
     constructor(x, y, isPlayer = true, cards = []) {
@@ -2859,6 +2862,18 @@ export class Game {
         this.artifactCard.render(ctx);
         this.nativesCard.render(ctx);
 
+        // Render version watermark (right of artifact card)
+        ctx.save();
+        ctx.font = '10px PixelFont, monospace';
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)'; // Purple with transparency
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const watermarkX = this.artifactCard.x + 50;
+        const watermarkY = this.midY;
+        ctx.fillText('scg', watermarkX, watermarkY - 8);
+        ctx.fillText(`v${VERSION}`, watermarkX, watermarkY + 8);
+        ctx.restore();
+
         // Render gates (with selection mode highlighting)
         const selectedCard = this.selectingGate && this.selectedCardIndex >= 0
             ? (this.selectedCardIsPlayer1 ? this.p1Hand : this.p2Hand)[this.selectedCardIndex]
@@ -4507,6 +4522,17 @@ export class Game {
     // Flip generator control when destroyed
     flipGeneratorControl() {
         if (!this.planetaryGenerator) return;
+
+        const previousOwner = this.planetaryGenerator.isPlayer1;
+
+        // Kill all garrisoned units - send to graveyard
+        if (this.planetaryGenerator.garrisonedUnits && this.planetaryGenerator.garrisonedUnits.length > 0) {
+            const graveyard = previousOwner ? this.p1Graveyard : this.p2Graveyard;
+            for (const unit of this.planetaryGenerator.garrisonedUnits) {
+                graveyard.add(unit.data || unit);
+            }
+            this.showMessage(`${this.planetaryGenerator.garrisonedUnits.length} garrisoned units destroyed!`);
+        }
 
         // Flip ownership
         this.planetaryGenerator.isPlayer1 = !this.planetaryGenerator.isPlayer1;
