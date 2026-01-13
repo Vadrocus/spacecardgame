@@ -372,11 +372,11 @@
     },
     {
       "id": 29,
-      "name": "Orbital Strike",
+      "name": "Orbital Bombardment",
       "type": "event",
-      "cost": 0,
-      "requirement": "Requires Capital Ship",
-      "effect": "Capital ship can attack surface unit directly with -1 penalty",
+      "cost": 3,
+      "ability": "Deal 3 damage to target ground unit",
+      "effect": "Deal 3 damage to target ground unit",
       "flavor": "Precision from the heavens. The enemy never sees it coming. —Gunnery Chief Barnes",
       "art": {
         "style": "Dramatic action scene like Simon Stålenhag",
@@ -451,7 +451,8 @@
       "type": "event",
       "cost": 3,
       "costAlternate": "0 if played from orbital structure",
-      "effect": "Deal damage to all enemy surface units and structures in target sector",
+      "ability": "Deal 3 damage to target ground unit",
+      "effect": "Deal 3 damage to target ground unit",
       "flavor": "Orbital superiority means we choose when and where to apply overwhelming force. —Fleet Coordinator Saito",
       "art": {
         "style": "Epic scale destruction like Karel Thole",

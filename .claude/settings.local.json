@@ -4,7 +4,16 @@
       "Bash(python -m http.server:*)",
       "Bash(curl:*)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(node --check:*)",
+      "Bash(node -e:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(python -m json.tool:*)"
     ]
   }
 }

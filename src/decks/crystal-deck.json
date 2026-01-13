@@ -626,6 +626,58 @@
         "style": "Geometric abstraction like Peter Mohrbacher",
         "description": "A crystalline descent vehicle that phases through atmosphere rather than burning through it. The craft restructures itself during descent, reforming into a ground-based crystal formation that births a defensive unit."
       }
+    },
+    {
+      "id": 49,
+      "name": "Survey Team Alpha",
+      "type": "surface_unit",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 1, "scan": 2 },
+      "ability": "Can locate hidden resources and artifacts",
+      "flavor": "The crystals whisper of buried secrets. We listen. —Crystal Seeker Prime",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A group of crystalline entities examining ancient alien ruins. They project scanning beams from faceted appendages, mapping underground structures with resonant frequencies."
+      }
+    },
+    {
+      "id": 50,
+      "name": "Survey Team Beta",
+      "type": "surface_unit",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 1, "scan": 2 },
+      "ability": "Can locate hidden resources and artifacts. Grants +1 Research when surveying.",
+      "flavor": "Every frequency tells a story. We hear them all. —Harmonic Scout Collective",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A survey team of living crystals that resonate with the planet's geological formations, using harmonic waves to detect hidden artifacts."
+      }
+    },
+    {
+      "id": 51,
+      "name": "Survey Team Gamma",
+      "type": "surface_unit",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 1, "scan": 2 },
+      "ability": "Can locate hidden resources and artifacts. Grants +1 Research when surveying.",
+      "flavor": "The ground sings of what lies beneath. —Geomancer Unit Seven",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "An elite crystalline survey unit with enhanced sensory arrays, their bodies tuned to detect the faintest energy signatures."
+      }
+    },
+    {
+      "id": 52,
+      "name": "Survey Team Delta",
+      "type": "surface_unit",
+      "cost": 2,
+      "stats": { "attack": 1, "defense": 2, "scan": 2 },
+      "ability": "Can locate hidden resources and artifacts. Grants +1 Research when surveying. Enhanced defensive capabilities.",
+      "flavor": "Hostile territory? We are crystal. We endure. —Armored Seeker Phalanx",
+      "art": {
+        "style": "Geometric abstraction like Peter Mohrbacher",
+        "description": "A heavily-reinforced survey team with thicker crystal plating, designed for surveying dangerous regions."
+      }
     }
   ]
 }
