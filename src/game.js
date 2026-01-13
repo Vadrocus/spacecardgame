@@ -428,6 +428,7 @@ export class BattlefieldCard {
         this.tapRotation = 0;
         this.summoningSickness = true;
         this.isAttackTarget = false;
+        this.movedThisTurn = false;
 
         // Animation
         this.spawnTime = 0;
@@ -2578,17 +2579,11 @@ export class Game {
                         const onGround = this.p1Planet.includes(card) || this.p2Planet.includes(card);
 
                         if (inOrbit || onGround) {
-                            // Check for valid targets
-                            const hasTargets = this.getValidAttackTargets(card).length > 0;
-                            if (hasTargets) {
-                                // Add to combat stack (MTG style - select multiple attackers)
-                                this.addToCombatStack(card);
-                                this.inCombatSelection = true;
-                                return;
-                            } else {
-                                this.showMessage('No valid targets!');
-                                return;
-                            }
+                            // Always allow entering combat mode - can cancel with right-click
+                            // or right-click on generator to garrison
+                            this.addToCombatStack(card);
+                            this.inCombatSelection = true;
+                            return;
                         }
                     }
 
