@@ -155,11 +155,15 @@ export class CombatSystem {
         return bonus;
     }
 
-    // Check if unit has double attack ability
+    // ==================== ABILITY DETECTION ====================
+    // Based on triggers.md ability list
+
+    // Check if unit has double attack ability (Barrage)
     hasDoubleAttack(card) {
         const ability = (card.data?.ability || '').toLowerCase();
         const name = (card.data?.name || '').toLowerCase();
-        return ability.includes('attack twice') || name.includes('vanguard elite');
+        return ability.includes('attack twice') || ability.includes('barrage') ||
+               name.includes('vanguard elite');
     }
 
     // Check if unit cannot counter-attack
@@ -179,24 +183,247 @@ export class CombatSystem {
     // Get reflected damage amount
     getReflectedDamage(card) {
         const ability = (card.data?.ability || '').toLowerCase();
-        // "Redirects 1 damage" or similar
         const match = ability.match(/redirect[s]?\s*(\d+)/i);
         return match ? parseInt(match[1]) : 1;
+    }
+
+    // Quick - Deals damage before opponent (First Strike)
+    hasQuick(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('quick') || ability.includes('first strike') ||
+               ability.includes('strikes first') || ability.includes('deals damage first');
+    }
+
+    // Fatal - Any damage destroys target (Deathtouch)
+    hasFatal(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('fatal') || ability.includes('deathtouch') ||
+               ability.includes('any damage destroys') || ability.includes('lethal');
+    }
+
+    // Pierce - Excess damage carries through (Trample)
+    hasPierce(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('pierce') || ability.includes('trample') ||
+               ability.includes('excess damage');
+    }
+
+    // Rush - Can act immediately when deployed (Haste)
+    hasRush(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('rush') || ability.includes('haste') ||
+               ability.includes('act immediately') || ability.includes('no summoning sickness');
+    }
+
+    // Elevated - Can only be attacked by elevated units (Flying)
+    hasElevated(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        const type = (card.data?.type || '').toLowerCase();
+        return ability.includes('elevated') || ability.includes('flying') ||
+               ability.includes('only attacked by elevated') ||
+               type.includes('orbital') || type.includes('capital_ship') ||
+               type.includes('scout_ship') || type.includes('science_ship');
+    }
+
+    // Anti-Elevated - Can target elevated units from ground
+    hasAntiElevated(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('anti-air') || ability.includes('target elevated') ||
+               ability.includes('target orbital') || ability.includes('anti-elevated');
+    }
+
+    // Drain - Damage dealt generates resources or heals
+    hasDrain(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('drain') || ability.includes('lifelink') ||
+               ability.includes('damage dealt generates') || ability.includes('heals when dealing');
+    }
+
+    // Shroud - Cannot be targeted by opponents
+    hasShroud(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('shroud') || ability.includes('hexproof') ||
+               ability.includes('cannot be targeted') || ability.includes('untargetable');
+    }
+
+    // Ward - Immune to specific types
+    hasWard(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('ward') || ability.includes('immune to');
+    }
+
+    // Get ward protection type
+    getWardType(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        if (ability.includes('immune to event')) return 'event';
+        if (ability.includes('immune to orbital')) return 'orbital';
+        if (ability.includes('immune to ground')) return 'ground';
+        const match = ability.match(/ward\s*\(([^)]+)\)/i);
+        return match ? match[1].trim() : null;
+    }
+
+    // Alert - Can attack without becoming tapped (Vigilance)
+    hasAlert(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('alert') || ability.includes('vigilance') ||
+               ability.includes('without tapping') || ability.includes('doesn\'t tap');
+    }
+
+    // Armored - Cannot be destroyed by damage
+    hasArmored(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('armored') || ability.includes('indestructible') ||
+               ability.includes('cannot be destroyed by damage');
+    }
+
+    // Persist - Return weakened when destroyed
+    hasPersist(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('persist') || ability.includes('return weakened');
+    }
+
+    // Undying - Return strengthened when destroyed
+    hasUndying(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('undying') || ability.includes('return strengthened');
+    }
+
+    // Phase - Unblockable if opponent has specific type
+    hasPhase(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('phase') || ability.includes('unblockable');
+    }
+
+    // Get phase bypass type
+    getPhaseType(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        const match = ability.match(/phase\s*\(([^)]+)\)/i);
+        if (match) return match[1].trim();
+        if (ability.includes('unblockable by capital')) return 'capital';
+        if (ability.includes('unblockable by frigate')) return 'frigate';
+        if (ability.includes('unblockable by cruiser')) return 'cruiser';
+        return null;
+    }
+
+    // Cloak - Deploy hidden, reveal for cost (Morph)
+    hasCloak(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('cloak') || ability.includes('morph') ||
+               ability.includes('face-down') || ability.includes('deploy hidden');
+    }
+
+    // Get morph/cloak cost
+    getCloakCost(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        const match = ability.match(/cloak\s*\((\d+)\)/i) || ability.match(/morph\s*\((\d+)\)/i);
+        return match ? parseInt(match[1]) : 3;
+    }
+
+    // Salvage - Can be played from discard
+    hasSalvage(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        return ability.includes('salvage') || ability.includes('play from discard') ||
+               ability.includes('graveyard');
+    }
+
+    // Get salvage cost multiplier
+    getSalvageCostMultiplier(card) {
+        const ability = (card.data?.ability || '').toLowerCase();
+        const match = ability.match(/salvage\s*\(([0-9.]+)x?\)/i);
+        return match ? parseFloat(match[1]) : 1.5;
     }
 
     // Enhanced performCombat with abilities
     performCombatWithAbilities(attacker, defender) {
         const g = this.game;
-        const attackerPower = this.getEffectiveAttack(attacker);
+        let attackerPower = this.getEffectiveAttack(attacker);
         const defenderPower = this.getEffectiveAttack(defender);
 
-        // Deal damage to defender
-        defender.dealDamage(attackerPower);
+        // Barrage - attacker deals double damage
+        if (this.hasDoubleAttack(attacker)) {
+            attackerPower *= 2;
+        }
 
-        // Check if attacker can counter-attack
-        if (!this.cannotCounterAttack(attacker)) {
-            // Defender deals counter damage to attacker
-            attacker.dealDamage(defenderPower);
+        // Quick (First Strike) - attacker deals damage first
+        if (this.hasQuick(attacker) && !this.hasQuick(defender)) {
+            // Apply Fatal check
+            if (this.hasFatal(attacker) && attackerPower > 0) {
+                defender.damage = defender.currentToughness; // Instant kill
+                g.showMessage(`${attacker.data.name}'s Fatal strike destroys ${defender.data.name}!`);
+            } else {
+                defender.dealDamage(attackerPower);
+            }
+
+            // Check if defender dies before counter-attack
+            if (defender.damage >= defender.currentToughness) {
+                g.showMessage(`Quick strike! ${attacker.data.name} destroys ${defender.data.name}!`);
+
+                // Pierce - excess damage carries through
+                if (this.hasPierce(attacker)) {
+                    const excess = attackerPower - (defender.currentToughness - (defender.damage - attackerPower));
+                    if (excess > 0) {
+                        g.showMessage(`Pierce! ${excess} damage carries through!`);
+                        // Damage could go to player health or adjacent units
+                    }
+                }
+
+                // Drain - heal or generate resources
+                if (this.hasDrain(attacker)) {
+                    g.showMessage(`Drain! +${attackerPower} resources!`);
+                    // Could add to gate or heal
+                }
+
+                g._checkUnitDeaths();
+                return false;
+            }
+
+            // Defender counter-attacks (if it survives and can counter)
+            if (!this.cannotCounterAttack(defender)) {
+                if (this.hasFatal(defender) && defenderPower > 0) {
+                    attacker.damage = attacker.currentToughness;
+                } else {
+                    attacker.dealDamage(defenderPower);
+                }
+            }
+        }
+        // Defender has Quick, attacker doesn't
+        else if (this.hasQuick(defender) && !this.hasQuick(attacker)) {
+            if (this.hasFatal(defender) && defenderPower > 0) {
+                attacker.damage = attacker.currentToughness;
+                g.showMessage(`${defender.data.name}'s Fatal strike destroys ${attacker.data.name}!`);
+            } else {
+                attacker.dealDamage(defenderPower);
+            }
+
+            if (attacker.damage >= attacker.currentToughness) {
+                g.showMessage(`Quick block! ${defender.data.name} destroys ${attacker.data.name}!`);
+                g._checkUnitDeaths();
+                return false;
+            }
+
+            // Attacker deals damage after
+            if (this.hasFatal(attacker) && attackerPower > 0) {
+                defender.damage = defender.currentToughness;
+            } else {
+                defender.dealDamage(attackerPower);
+            }
+        }
+        // Normal combat - simultaneous damage
+        else {
+            // Apply Fatal ability
+            if (this.hasFatal(attacker) && attackerPower > 0) {
+                defender.damage = defender.currentToughness;
+            } else {
+                defender.dealDamage(attackerPower);
+            }
+
+            if (!this.cannotCounterAttack(defender)) {
+                if (this.hasFatal(defender) && defenderPower > 0) {
+                    attacker.damage = attacker.currentToughness;
+                } else {
+                    attacker.dealDamage(defenderPower);
+                }
+            }
         }
 
         // Check for damage reflection (Prismatic Deflector)
@@ -206,13 +433,37 @@ export class CombatSystem {
             g.showMessage(`${defender.data.name} reflects ${reflectedDamage} damage!`);
         }
 
+        // Pierce - excess damage carries through to player
+        if (this.hasPierce(attacker) && defender.damage >= defender.currentToughness) {
+            const excess = attackerPower - defender.currentToughness;
+            if (excess > 0) {
+                g.showMessage(`Pierce! ${excess} excess damage!`);
+            }
+        }
+
+        // Drain - resource generation
+        if (this.hasDrain(attacker) && attackerPower > 0) {
+            const drainAmount = Math.min(attackerPower, defender.currentToughness);
+            g.showMessage(`Drain! +${drainAmount}!`);
+        }
+
         g.showMessage(`${attacker.data.name} attacks ${defender.data.name}!`);
+
+        // Check for Armored - cannot be destroyed by damage
+        if (this.hasArmored(defender) && defender.damage >= defender.currentToughness) {
+            defender.damage = defender.currentToughness - 1; // Stays at 1 HP
+            g.showMessage(`${defender.data.name} is Armored!`);
+        }
+        if (this.hasArmored(attacker) && attacker.damage >= attacker.currentToughness) {
+            attacker.damage = attacker.currentToughness - 1;
+            g.showMessage(`${attacker.data.name} is Armored!`);
+        }
+
         g._checkUnitDeaths();
 
-        // Handle double attack
-        if (this.hasDoubleAttack(attacker) && !attacker.attackedTwice) {
-            attacker.attackedTwice = true;
-            return true; // Can attack again
+        // Alert - doesn't tap when attacking
+        if (this.hasAlert(attacker)) {
+            attacker.tapped = false;
         }
 
         return false; // Attack finished
