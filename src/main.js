@@ -3,9 +3,9 @@
  * Now with multiplayer support!
  */
 
-import { Engine, Draw } from './engine.js';
-import { Game } from './game.js';
-import { Multiplayer } from './multiplayer.js';
+import { Engine, Draw } from './engine.js?v=9';
+import { Game } from './game.js?v=9';
+import { Multiplayer } from './multiplayer.js?v=9';
 
 // Global state
 let engine = null;

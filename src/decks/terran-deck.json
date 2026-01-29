@@ -75,8 +75,8 @@
       "name": "Apollo",
       "type": "science_ship",
       "cost": 3,
-      "stats": { "attack": 0, "defense": 2, "speed": 2, "science": 2 },
-      "ability": "Generates 1 Science point per turn when in orbit",
+      "stats": { "attack": 0, "defense": 2, "speed": 2, "research": 1 },
+      "ability": "Generates 1 Research per turn when in orbit",
       "flavor": "Every question answered reveals ten more worth asking. That's why we're out here. —Dr. Okonkwo, Chief Science Officer",
       "art": {
         "style": "Clean technical blueprint style like Ron Cobb",
@@ -140,8 +140,8 @@
       "name": "Research Station Alpha",
       "type": "space_station",
       "cost": 4,
-      "stats": { "defense": 2, "science": 2 },
-      "ability": "Generates 2 Science points per turn",
+      "stats": { "defense": 2, "research": 2 },
+      "ability": "Generates 2 Research per turn",
       "flavor": "The universe doesn't give up its secrets easily, but we're patient. —Dr. Singh, Research Director",
       "art": {
         "style": "Clean retrofuturism like Robert McCall",
@@ -202,11 +202,11 @@
     },
     {
       "id": 16,
-      "name": "Science Corps",
+      "name": "Research Corps",
       "type": "surface_unit",
       "cost": 2,
-      "stats": { "attack": 0, "defense": 1, "science": 2 },
-      "ability": "Doubles Science generation of adjacent Research structures",
+      "stats": { "attack": 0, "defense": 1, "research": 1 },
+      "ability": "Survey Teams you control generate +1 Research per survey action",
       "flavor": "In the field, theory becomes reality. That's where the real breakthroughs happen. —Professor Yamada",
       "art": {
         "style": "Bright sci-fi illustration like Angus McKie",
@@ -218,9 +218,9 @@
       "name": "Mobile Research Lab",
       "type": "structure_planetside",
       "cost": 3,
-      "stats": { "defense": 2, "science": 1 },
-      "ability": "Generates 1 Science point per turn, can be upgraded with Science equipment",
-      "flavor": "Science doesn't wait for safety. We bring the lab to the discovery. —Dr. Martinez, Field Research",
+      "stats": { "defense": 2, "research": 1 },
+      "ability": "Generates 1 Research per turn. Can be upgraded with Research equipment",
+      "flavor": "Research doesn't wait for safety. We bring the lab to the discovery. —Dr. Martinez, Field Research",
       "art": {
         "style": "Cutaway technical illustration like Hans Jenssen",
         "description": "A modular wheeled laboratory with deployable research equipment. The structure features a transparent dome section housing scientific equipment and specimen analysis stations. The design shows both exterior details and a cutaway revealing the interior layout and scientists at work. The lab is positioned in an alien landscape with equipment deployed around its perimeter."
@@ -231,8 +231,8 @@
       "name": "Advanced Research Complex",
       "type": "structure_planetside",
       "cost": 5,
-      "stats": { "defense": 3, "science": 3 },
-      "ability": "Generates 3 Science points per turn, advances science-based win conditions",
+      "stats": { "defense": 3, "research": 2 },
+      "ability": "Generates 2 Research per turn, advances research-based win conditions",
       "flavor": "Here we unlock the secrets that will shape humanity's next thousand years. —Director Volkov, Advanced Research",
       "art": {
         "style": "Architectural concept art like Syd Mead",
@@ -387,9 +387,33 @@
       "id": 30,
       "name": "Dropship Deployment",
       "type": "event",
-      "cost": 0,
-      "effect": "Move crew from one ship to reinforce a Surface Unit (+1 to all actions this turn)",
+      "cost": 2,
+      "effect": "Requires Capital Ship in orbit. Deploy a Marine Squad to the planet surface.",
       "flavor": "Reinforcements inbound! Hold the line! —Platoon Commander Jackson",
+      "art": {
+        "style": "Military action scene like James Gurney",
+        "description": "Troops rapidly descending from a dropship under combat conditions. The ship hovers just above ground level with deployment ramps extended and defensive systems active. Soldiers sprint from the ship into defensive positions while under fire from unseen enemies. The scene captures the controlled chaos of battlefield deployment with smoke, atmospheric effects, and urgent movement."
+      }
+    },
+    {
+      "id": 52,
+      "name": "Dropship Deployment",
+      "type": "event",
+      "cost": 2,
+      "effect": "Requires Capital Ship in orbit. Deploy a Marine Squad to the planet surface.",
+      "flavor": "Drop zone secured! All units, move out! —Sergeant Torres",
+      "art": {
+        "style": "Military action scene like James Gurney",
+        "description": "Troops rapidly descending from a dropship under combat conditions. The ship hovers just above ground level with deployment ramps extended and defensive systems active. Soldiers sprint from the ship into defensive positions while under fire from unseen enemies. The scene captures the controlled chaos of battlefield deployment with smoke, atmospheric effects, and urgent movement."
+      }
+    },
+    {
+      "id": 53,
+      "name": "Dropship Deployment",
+      "type": "event",
+      "cost": 2,
+      "effect": "Requires Capital Ship in orbit. Deploy a Marine Squad to the planet surface.",
+      "flavor": "Second wave deploying! Give them cover fire! —Lieutenant Hawkins",
       "art": {
         "style": "Military action scene like James Gurney",
         "description": "Troops rapidly descending from a dropship under combat conditions. The ship hovers just above ground level with deployment ramps extended and defensive systems active. Soldiers sprint from the ship into defensive positions while under fire from unseen enemies. The scene captures the controlled chaos of battlefield deployment with smoke, atmospheric effects, and urgent movement."
@@ -409,18 +433,6 @@
     },
     {
       "id": 32,
-      "name": "Reinforcements",
-      "type": "event",
-      "cost": 3,
-      "effect": "Draw 2 cards and immediately deploy one unit at -1 cost",
-      "flavor": "The Consensus never abandons its own. Reinforcements are always coming. —Admiral Kerner",
-      "art": {
-        "style": "Space opera action scene like Chris Foss",
-        "description": "Multiple ships emerging from a gate formation in a dramatic arrival moment. The reinforcement fleet arrives in perfect formation with energy still dissipating from interstellar travel. The design emphasizes the coordinated nature of the Terran military response with ships of various classes arriving simultaneously. The background shows the tactical situation they're arriving to address."
-      }
-    },
-    {
-      "id": 33,
       "name": "Final Protocol",
       "type": "event",
       "rarity": "rare",
@@ -487,10 +499,10 @@
     },
     {
       "id": 38,
-      "name": "Scientific Breakthrough",
+      "name": "Research Breakthrough",
       "type": "event",
       "cost": 2,
-      "effect": "Double Science generation for one turn",
+      "effect": "Gain 5 Research points immediately.",
       "flavor": "Eureka! Everything we thought we knew just became obsolete. —Dr. Patel, Theoretical Physics",
       "art": {
         "style": "Inspirational scientific moment like Bob Eggleton",
@@ -511,21 +523,9 @@
     },
     {
       "id": 40,
-      "name": "Diplomatic Initiative",
-      "type": "event",
-      "cost": 2,
-      "effect": "Prevent all attacks for one round, draw 1 card",
-      "flavor": "Not every problem requires bullets. Sometimes words are the most powerful weapon. —Ambassador Okoro",
-      "art": {
-        "style": "Formal diplomatic scene like Frank R. Paul",
-        "description": "Terran representatives engaging with alien counterparts in a negotiation chamber. The diplomatic meeting takes place in a neutral space with appropriate ceremonial elements from both cultures. The design emphasizes the tension and potential of diplomatic exchange through body language and environmental details. Security personnel remain visible but unobtrusive in the background."
-      }
-    },
-    {
-      "id": 41,
       "name": "Quantum Encryption Matrix",
       "type": "artifact",
-      "acquisition": "Requires 3 Science points to decrypt",
+      "acquisition": "Requires 3 Research to decrypt",
       "ability": "Once per turn, prevent an opponent's attempt",
       "flavor": "We barely understand it, but we've learned to use it. That's progress. —Dr. Zhang, Artifact Research",
       "art": {
@@ -537,7 +537,7 @@
       "id": 42,
       "name": "Chronometric Stabilizer",
       "type": "artifact",
-      "acquisition": "Found in ancient ruins, requires Science ship scan",
+      "acquisition": "Found in ancient ruins, requires Research ship scan",
       "ability": "Enhance temporal effects, allowing reroll of one die per turn",
       "flavor": "It predates our civilization by millennia, yet it grants us glimpses of futures yet to come. —Archaeologist Dubois",
       "art": {

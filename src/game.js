@@ -7,7 +7,7 @@ import { planetDeck, artifactDeck, nativesDeck, shuffle, pickRandom, loadTerranD
 import { Draw } from './engine.js';
 
 // Game version
-const VERSION = '1.1.4';
+const VERSION = '1.1.6';
 
 // Deck class
 export class Deck {
@@ -1133,8 +1133,10 @@ export class EventAnimation {
 
 // Main Game class
 export class Game {
-    constructor(engine) {
+    constructor(engine, multiplayer = null, gameMode = 'single') {
         this.engine = engine;
+        this.multiplayer = multiplayer;
+        this.gameMode = gameMode;
         this.initialized = false;
 
         // Draw static cards at game start
@@ -1354,36 +1356,47 @@ export class Game {
         // Regenerate defense for all cards at end of turn
         this.regenerateDefense();
 
-        // Apply Crystal Monolith growth at start of each turn
-        this.applyMonolithGrowth();
+        // === BEGIN TURN PHASE ===
+        this.beginTurnPhase(this.isPlayer1Turn);
 
-        // Generate energy for the new active player
-        this.generateEnergy(this.isPlayer1Turn);
+        // Run AI turn if it's player 2's turn (single player mode only)
+        if (!this.isPlayer1Turn && this.gameMode === 'single') {
+            this._runAITurn();
+        }
+    }
 
-        // Reset actions for the new active player
-        this.resetActions(this.isPlayer1Turn);
+    // Beginning of turn phase - all start-of-turn triggers happen here
+    beginTurnPhase(isPlayer1) {
+        console.log(`[Turn] Beginning turn phase for Player ${isPlayer1 ? '1' : '2'}`);
 
-        // Reset all gates for the new active player
-        const gates = this.isPlayer1Turn ? this.p1Gates : this.p2Gates;
+        // 1. Untap all cards
+        const orbit = isPlayer1 ? this.p1Orbit : this.p2Orbit;
+        const planet = isPlayer1 ? this.p1Planet : this.p2Planet;
+        orbit.forEach(c => c.untap());
+        planet.forEach(c => c.untap());
+
+        // 2. Reset gates
+        const gates = isPlayer1 ? this.p1Gates : this.p2Gates;
         gates.forEach(g => g.reset());
 
-        // Untap all cards for the new active player
-        const newOrbit = this.isPlayer1Turn ? this.p1Orbit : this.p2Orbit;
-        const newPlanet = this.isPlayer1Turn ? this.p1Planet : this.p2Planet;
-        newOrbit.forEach(c => c.untap());
-        newPlanet.forEach(c => c.untap());
+        // 3. Reset actions
+        this.resetActions(isPlayer1);
 
-        // Draw a card for the new active player
-        const drawnCard = this.drawCard(this.isPlayer1Turn);
+        // 4. Apply Crystal Monolith growth
+        this.applyMonolithGrowth();
+
+        // 5. Generate energy from structures
+        this.generateEnergy(isPlayer1);
+
+        // 6. Generate research from research-producing cards
+        this.generateResearch(isPlayer1);
+
+        // 7. Draw a card
+        const drawnCard = this.drawCard(isPlayer1);
         if (drawnCard) {
-            this.showMessage(this.isPlayer1Turn ? "Player 1's turn - Drew a card!" : "Player 2's turn - Drew a card!");
+            this.showMessage(isPlayer1 ? "Player 1's turn - Drew a card!" : "Player 2's turn - Drew a card!");
         } else {
-            this.showMessage(this.isPlayer1Turn ? "Player 1's turn" : "Player 2's turn");
-        }
-
-        // Run AI turn if it's player 2's turn
-        if (!this.isPlayer1Turn) {
-            this._runAITurn();
+            this.showMessage(isPlayer1 ? "Player 1's turn" : "Player 2's turn");
         }
     }
 
@@ -1788,9 +1801,16 @@ export class Game {
         // Check if this is an event card
         if (this.isEventCard(card)) {
             // First check if this event needs targeting (returns false if so)
-            const effectComplete = this._triggerEventEffect(card, isPlayer1);
+            const effectResult = this._triggerEventEffect(card, isPlayer1);
 
-            if (effectComplete) {
+            // Handle failed events - return card to hand and refund gate
+            if (effectResult === 'failed') {
+                hand.push(card);
+                gate.used = false;
+                return false;
+            }
+
+            if (effectResult === true) {
                 // Event resolves immediately - animate and go to graveyard
                 const centerX = this.boardX + this.boardW / 2;
                 const centerY = this.midY;
@@ -1815,7 +1835,7 @@ export class Game {
                 this.eventAnimations.push(eventAnim);
                 this.showMessage(`${card.name} triggered!`);
             }
-            // If effectComplete is false, the card is in targeting mode (this.eventCard)
+            // If effectResult is false, the card is in targeting mode (this.eventCard)
             // and will be handled by the targeting system
         } else if (this.isEquipment(card)) {
             // Equipment cards: enter targeting mode
@@ -2098,7 +2118,7 @@ export class Game {
     // Trigger an event card's effect
     _triggerEventEffect(card, isPlayer1) {
         // Use the comprehensive playEventCard method
-        this.playEventCard(card, isPlayer1);
+        return this.playEventCard(card, isPlayer1);
     }
 
     // Layout cards in orbit zone
@@ -4785,6 +4805,47 @@ export class Game {
         return isPlayer1 ? this.p1Energy : this.p2Energy;
     }
 
+    // Generate research from cards at beginning of turn
+    generateResearch(isPlayer1) {
+        const orbit = isPlayer1 ? this.p1Orbit : this.p2Orbit;
+        const planet = isPlayer1 ? this.p1Planet : this.p2Planet;
+        const allCards = [...orbit, ...planet];
+
+        let researchGenerated = 0;
+
+        console.log(`[Research] Checking ${allCards.length} cards for player ${isPlayer1 ? '1' : '2'}`);
+
+        for (const card of allCards) {
+            const cardData = card.data || {};
+            const name = (cardData.name || '').toLowerCase();
+            const ability = (cardData.ability || '').toLowerCase();
+            const stats = cardData.stats || {};
+            const isInOrbit = orbit.includes(card);
+            const isOnPlanet = planet.includes(card);
+
+            console.log(`[Research] Card: ${cardData.name}, stats:`, stats, `ability: ${ability}`);
+
+            // Method 1: Check for research stat on the card
+            if (stats.research && typeof stats.research === 'number') {
+                // If ability says "when in orbit", only count if actually in orbit
+                if (ability.includes('when in orbit')) {
+                    if (isInOrbit) {
+                        console.log(`[Research] ${cardData.name} in orbit, adding ${stats.research} research`);
+                        researchGenerated += stats.research;
+                    }
+                } else {
+                    console.log(`[Research] ${cardData.name} has research stat, adding ${stats.research} research`);
+                    researchGenerated += stats.research;
+                }
+            }
+        }
+
+        // Apply research using same method as Survey Team
+        if (researchGenerated > 0) {
+            this.addResearch(researchGenerated, isPlayer1);
+        }
+    }
+
     // Regenerate defense for all cards at end of turn
     regenerateDefense() {
         const allCards = [...this.p1Orbit, ...this.p2Orbit, ...this.p1Planet, ...this.p2Planet];
@@ -4927,6 +4988,34 @@ export class Game {
                 damaged[0].damage = 0;
                 this.showMessage(`${damaged[0].data.name} repaired!`);
             }
+            return true;
+        }
+
+        // Research Breakthrough - add 5 research points
+        if (name.includes('research breakthrough') || name.includes('scientific breakthrough')) {
+            this.addResearch(5, isPlayer1);
+            this.showMessage('Research Breakthrough! +5 Research!');
+            return true;
+        }
+
+        // Dropship Deployment - spawn Marine Squad (requires capital ship in orbit)
+        if (name.includes('dropship deployment')) {
+            const orbit = isPlayer1 ? this.p1Orbit : this.p2Orbit;
+            const hasCapitalShip = orbit.some(card =>
+                (card.data?.type || '').toLowerCase().includes('capital')
+            );
+
+            if (!hasCapitalShip) {
+                this.showMessage('Dropship Deployment requires a Capital Ship in orbit!');
+                return 'failed'; // Card not consumed - return to hand
+            }
+
+            // Spawn Marine Squad on planet
+            const planet = isPlayer1 ? this.p1Planet : this.p2Planet;
+            const marineSquad = this.createGroundUnit(isPlayer1);
+            planet.push(marineSquad);
+            this._layoutPlanet(isPlayer1);
+            this.showMessage('Dropship Deployment! Marine Squad deployed!');
             return true;
         }
 
@@ -5086,5 +5175,50 @@ export class Game {
         for (const card of allCards) {
             card.movedThisTurn = false;
         }
+    }
+
+    // Handle actions from remote player (multiplayer)
+    handleRemoteAction(actionType, actionData) {
+        if (this.gameMode === 'single') return;
+
+        console.log('Remote action:', actionType, actionData);
+
+        switch (actionType) {
+            case 'playCard':
+                // Remote player played a card
+                if (actionData.cardIndex !== undefined) {
+                    const isRemotePlayer1 = this.multiplayer?.isPlayer1 === false;
+                    this.playCard(actionData.cardIndex, isRemotePlayer1, actionData.gate);
+                }
+                break;
+
+            case 'endTurn':
+                // Remote player ended their turn
+                this.endTurn();
+                break;
+
+            case 'attack':
+                // Remote player initiated an attack
+                // Handle combat from remote
+                break;
+
+            case 'addGate':
+                // Remote player added a gate
+                if (!this.multiplayer?.isPlayer1) {
+                    // We are player 2, so remote is player 1
+                    this.isPlayer1Turn = true;
+                }
+                this.addGate();
+                break;
+
+            default:
+                console.log('Unknown remote action:', actionType);
+        }
+    }
+
+    // Send action to remote player (multiplayer)
+    sendAction(actionType, actionData = {}) {
+        if (this.gameMode === 'single' || !this.multiplayer) return;
+        this.multiplayer.sendAction(actionType, actionData);
     }
 }
